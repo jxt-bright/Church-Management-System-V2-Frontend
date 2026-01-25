@@ -4,7 +4,7 @@ import { Eye, EyeOff, Search, UserPlus, Link, UserCheck, X } from 'lucide-react'
 import '../assets/styles/AddUser.css';
 import memberService from '../services/memberService';
 import userService from '../services/userService';
-import FlashMessage from '../components/FlashMessage'; 
+import FlashMessage from '../components/FlashMessage';
 import { useAuth } from '../context/AuthContext';
 
 const AddUser = () => {
@@ -19,13 +19,13 @@ const AddUser = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [members, setMembers] = useState([]); 
+  const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
-  
+
   const [showResults, setShowResults] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [flash, setFlash] = useState({ message: '', type: '' });
 
   const resultsRef = useRef(null);
@@ -64,7 +64,7 @@ const AddUser = () => {
     setSearchTerm(value);
     setShowResults(value.trim() !== '');
     if (!value.trim()) {
-      setMembers([]); 
+      setMembers([]);
     }
   };
 
@@ -84,44 +84,44 @@ const AddUser = () => {
     try {
       e.preventDefault();
 
-    if (loading) return;
+      if (loading) return;
       setLoading(true);
 
-    if (!formData.username || !formData.password || !formData.status || !formData.memberId) {
-      setFlash({ message: 'Please fill in all required fields and select a member', type: 'danger' });
-      return;
-    }
+      if (!formData.username || !formData.password || !formData.status || !formData.memberId) {
+        setFlash({ message: 'Please fill in all required fields and select a member', type: 'danger' });
+        return;
+      }
 
-    if (formData.password !== formData.confirmPassword) {
-      setFlash({ message: 'Passwords do not match', type: 'danger' });
-      return;
-    }
+      if (formData.password !== formData.confirmPassword) {
+        setFlash({ message: 'Passwords do not match', type: 'danger' });
+        return;
+      }
 
-    // Submit Logic
-    const response = await userService.addUser(formData);
-    
-    setFlash({ message: response.message, type: 'success' });
+      // Submit Logic
+      const response = await userService.addUser(formData);
 
-    // Reset form data
-    setFormData({
-      username: '',
-      status: '',
-      password: '',
-      confirmPassword: '',
-      memberId: ''
-    });
-    setSelectedMember(null);
-    setSearchTerm('');
+      setFlash({ message: response.message, type: 'success' });
+
+      // Reset form data
+      setFormData({
+        username: '',
+        status: '',
+        password: '',
+        confirmPassword: '',
+        memberId: ''
+      });
+      setSelectedMember(null);
+      setSearchTerm('');
 
     } catch (error) {
       setFlash({
         message: error.response?.data?.message || 'Error registering User',
         type: 'danger'
       });
-    }finally {
+    } finally {
       setLoading(false);
     }
-    
+
   };
 
 
@@ -129,7 +129,7 @@ const AddUser = () => {
     if (!searchTerm) return;
 
     if (loading) return;
-      setLoading(true);
+    setLoading(true);
 
     try {
       const params = { search: searchTerm };
@@ -145,7 +145,7 @@ const AddUser = () => {
       }
 
       setMembers(memberData);
-      
+
       if (memberData.length > 0) {
         setShowResults(true);
       }
@@ -161,13 +161,16 @@ const AddUser = () => {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchTerm) {
-        fetchMembers();
-      }
-    }, 350);
+    // const delayDebounceFn = setTimeout(() => {
+    //   if (searchTerm) {
+    //     fetchMembers();
+    //   }
+    // }, 350);
+    if (searchTerm) {
+      fetchMembers();
+    }
 
-    return () => clearTimeout(delayDebounceFn);
+    // return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
   useEffect(() => {

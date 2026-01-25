@@ -29,10 +29,11 @@ const GroupsView = () => {
 
     // Fetch Data
     useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            fetchGroups();
-        }, 350);
-        return () => clearTimeout(delayDebounceFn);
+        // const delayDebounceFn = setTimeout(() => {
+        //     fetchGroups();
+        // }, 350);
+        fetchGroups();
+        // return () => clearTimeout(delayDebounceFn);
     }, [currentPage, searchTerm]);
 
     useEffect(() => {

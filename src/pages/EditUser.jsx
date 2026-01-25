@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../assets/styles/AddUser.css';
 import memberService from '../services/memberService';
 import userService from '../services/userService';
-import FlashMessage from '../components/FlashMessage'; 
+import FlashMessage from '../components/FlashMessage';
 import { useAuth } from '../context/AuthContext';
 
 const EditUser = () => {
@@ -19,9 +19,9 @@ const EditUser = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [members, setMembers] = useState([]); 
+  const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
-  
+
   // UI States
   const [showResults, setShowResults] = useState(false);
   const [pageLoading, setPageLoading] = useState(true); // For initial fetch
@@ -35,7 +35,7 @@ const EditUser = () => {
     const fetchUserData = async () => {
       try {
         const userData = await userService.getUserById(id);
-        
+
         // Populate form
         setFormData({
           username: userData.username || '',
@@ -96,7 +96,7 @@ const EditUser = () => {
     setSearchTerm(value);
     setShowResults(value.trim() !== '');
     if (!value.trim()) {
-      setMembers([]); 
+      setMembers([]);
     }
   };
 
@@ -131,13 +131,19 @@ const EditUser = () => {
 
       // Submit Logic
       await userService.updateUser(id, formData);
-      
+
       setFlash({ message: 'User updated successfully', type: 'success' });
-      
+
       // Redirect after success
-      setTimeout(() => {
-         navigate('/users'); 
-      }, 1500);
+      // setTimeout(() => {
+      //    navigate('/users'); 
+      // }, 1500);
+      navigate('/users', {
+        state: {
+          flashMessage: response.message || 'User updated successfully!',
+          flashType: 'success'
+        }
+      });
 
     } catch (error) {
       setFlash({
@@ -151,7 +157,7 @@ const EditUser = () => {
   const fetchMembers = async () => {
     if (!searchTerm) return;
     if (loadingSearch) return;
-    
+
     setLoadingSearch(true);
 
     try {
@@ -168,7 +174,7 @@ const EditUser = () => {
       }
 
       setMembers(memberData);
-      
+
       if (memberData.length > 0) {
         setShowResults(true);
       }
@@ -180,13 +186,14 @@ const EditUser = () => {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchTerm) {
-        fetchMembers();
-      }
-    }, 350);
+    // const delayDebounceFn = setTimeout(() => {
+    //   if (searchTerm) {
+    //     fetchMembers();
+    //   }
+    // }, 350);
+    fetchMembers();
 
-    return () => clearTimeout(delayDebounceFn);
+    // return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
   useEffect(() => {
@@ -376,7 +383,7 @@ const EditUser = () => {
                 type="button"
                 onClick={handleCancel}
                 disabled={submitting}
-                style={{ 
+                style={{
                   flex: 1,
                   display: 'flex',
                   alignItems: 'center',

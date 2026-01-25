@@ -1,39 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Edit, Trash2, User, MoreVertical, Building2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import userService from '../services/userService';
 import FlashMessage from '../components/FlashMessage';
 import { useAuth } from '../context/AuthContext';
-import '../assets/styles/GroupsModern.css'; 
+import '../assets/styles/GroupsModern.css';
 
 const UsersView = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); 
+  const location = useLocation();
+  const { user } = useAuth();
 
-  
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [itemsPerPage] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
-  
+
   const [flash, setFlash] = useState({ message: '', type: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeDropdown, setActiveDropdown] = useState(null);
 
 
+  // Handle flash messages from previous pages
+  useEffect(() => {
+    if (location.state && location.state.flashMessage) {
+      setFlash({
+        message: location.state.flashMessage,
+        type: location.state.flashType || 'success'
+      });
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (user) {
-        fetchUsers();
-      }
-    }, 350);
-    return () => clearTimeout(delayDebounceFn);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchTerm, user]); 
+    // const delayDebounceFn = setTimeout(() => {
+    //   if (user) {
+    //     fetchUsers();
+    //   }
+    // }, 350);
+    fetchUsers();
+    // return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchTerm, user]);
 
   useEffect(() => {
     const handleClickOutside = () => setActiveDropdown(null);
@@ -56,7 +68,7 @@ const UsersView = () => {
 
       // Filter by Group ID if the user is not a manager
       if (user && user.status !== 'manager') {
-          params.groupId = user.groupId;
+        params.groupId = user.groupId;
       }
 
       const response = await userService.getUsers(params);
@@ -91,13 +103,13 @@ const UsersView = () => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
-  
+
   const handleEdit = (id) => {
     navigate(`/user/edit/${id}`);
   };
 
   const handleDelete = (id) => {
-    setActiveDropdown(null); 
+    setActiveDropdown(null);
 
     Swal.fire({
       title: "Delete User?",
@@ -123,7 +135,7 @@ const UsersView = () => {
           if (users.length === 1 && currentPage > 1) {
             setCurrentPage(prev => prev - 1);
           } else {
-            fetchUsers(); 
+            fetchUsers();
           }
         } catch (error) {
           console.error("Delete error:", error);

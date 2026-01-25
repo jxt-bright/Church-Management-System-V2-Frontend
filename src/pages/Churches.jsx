@@ -31,10 +31,11 @@ const ChurchesView = () => {
 
     // Fetch Data
     useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            fetchChurches();
-        }, 350);
-        return () => clearTimeout(delayDebounceFn);
+        // const delayDebounceFn = setTimeout(() => {
+        //     fetchChurches();
+        // }, 350);
+        fetchChurches();
+        // return () => clearTimeout(delayDebounceFn);
     }, [currentPage, searchTerm]);
 
     useEffect(() => {

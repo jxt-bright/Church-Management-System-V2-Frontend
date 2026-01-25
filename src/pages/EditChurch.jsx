@@ -106,17 +106,18 @@ const ChurchEditPage = () => {
       setGroups(groupData);
       if (groupData.length > 0) setShowResults(true);
     } catch (error) {
-      console.error("Group search error", error);
+      // console.error("Group search error", error);
     }
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchTerm && user?.status === 'manager') {
-        fetchGroups();
-      }
-    }, 350);
-    return () => clearTimeout(delayDebounceFn);
+    // const delayDebounceFn = setTimeout(() => {
+    //   if (searchTerm && user?.status === 'manager') {
+    //     fetchGroups();
+    //   }
+    // }, 350);
+    fetchGroups();
+    // return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, user]);
 
   useEffect(() => {

@@ -172,13 +172,16 @@ const AddChurch = () => {
 
     // Effects
     useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            if (searchTerm && user?.status === 'manager') {
-                fetchGroups();
-            }
-        }, 350);
+        // const delayDebounceFn = setTimeout(() => {
+        //     if (searchTerm && user?.status === 'manager') {
+        //         fetchGroups();
+        //     }
+        // }, 350);
+        if (searchTerm && user?.status === 'manager') {
+            fetchGroups();
+        }
 
-        return () => clearTimeout(delayDebounceFn);
+        // return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
 
     useEffect(() => {
@@ -231,20 +234,20 @@ const AddChurch = () => {
                                                     <label className="form-label fw-bold">
                                                         Select Group <span className="text-danger">*</span>
                                                     </label>
-                                                    
+
                                                     {/* Search Input */}
                                                     <div ref={resultsRef} style={{ position: 'relative' }}>
                                                         <div style={{ position: 'relative' }}>
-                                                            <Search 
-                                                                style={{ 
-                                                                    position: 'absolute', 
-                                                                    left: '12px', 
-                                                                    top: '50%', 
+                                                            <Search
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    left: '12px',
+                                                                    top: '50%',
                                                                     transform: 'translateY(-50%)',
                                                                     color: '#6c757d',
                                                                     width: '20px',
                                                                     height: '20px'
-                                                                }} 
+                                                                }}
                                                             />
                                                             <input
                                                                 type="text"
@@ -261,7 +264,7 @@ const AddChurch = () => {
 
                                                         {/* Search Results Dropdown */}
                                                         {showResults && (
-                                                            <div 
+                                                            <div
                                                                 style={{
                                                                     position: 'absolute',
                                                                     top: '100%',
@@ -329,7 +332,7 @@ const AddChurch = () => {
 
                                                     {/* Selected Group Display */}
                                                     {selectedGroup && (
-                                                        <div 
+                                                        <div
                                                             style={{
                                                                 marginTop: '1rem',
                                                                 padding: '1rem',

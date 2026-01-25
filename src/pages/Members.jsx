@@ -35,10 +35,11 @@ const MembersView = () => {
   const [flash, setFlash] = useState({ message: '', type: '' });
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchMembers();
-    }, 350);
-    return () => clearTimeout(delay);
+    // const delay = setTimeout(() => {
+    //   fetchMembers();
+    // }, 350);
+    fetchMembers();
+    // return () => clearTimeout(delay);
   }, [currentPage, searchTerm]);
 
   useEffect(() => {
