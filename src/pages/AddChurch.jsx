@@ -282,7 +282,7 @@ const AddChurch = () => {
                                                             >
                                                                 {groups.length === 0 ? (
                                                                     <div style={{ padding: '1rem', textAlign: 'center', color: '#6c757d' }}>
-                                                                        {isLoading ? 'Searching...' : 'No groups found.'}
+                                                                        {isLoading ? 'Searching...' : 'No group(s) found.'}
                                                                     </div>
                                                                 ) : (
                                                                     groups.map(group => (

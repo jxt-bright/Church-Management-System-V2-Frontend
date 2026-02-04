@@ -287,7 +287,7 @@ const GroupsView = () => {
                 ) : (
                     <div className="empty-state">
                         <Building2 style={{ width: '3rem', height: '3rem', marginBottom: '1rem', opacity: 0.3 }} />
-                        <h3>No Groups Found</h3>
+                        <h3>No Group(s) Found</h3>
                         <p>Try adjusting your search.</p>
                     </div>
                 )}

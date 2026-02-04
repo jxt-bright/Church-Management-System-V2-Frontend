@@ -345,7 +345,7 @@ const AddUser = () => {
                   <div className="search-results-dropdown" style={{ zIndex: 1000, backgroundColor: 'white' }}>
                     {members.length === 0 ? (
                       <div className="no-results">
-                        <p>{loading ? 'Searching...' : 'No members found.'}</p>
+                        <p>{loading ? 'Searching...' : 'No member(s) found.'}</p>
                       </div>
                     ) : (
                       members.map(member => (

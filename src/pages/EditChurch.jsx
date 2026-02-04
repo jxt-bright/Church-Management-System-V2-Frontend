@@ -256,7 +256,7 @@ const ChurchEditPage = () => {
                       overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 50
                     }}>
                       {groups.length === 0 ? (
-                        <div className="p-4 text-center text-gray-500">No groups found.</div>
+                        <div className="p-4 text-center text-gray-500">No group(s) found.</div>
                       ) : (
                         groups.map(group => (
                           <div

@@ -265,7 +265,7 @@ const ChurchesView = () => {
                 ) : (
                     <div className="empty-state">
                         <Building2 style={{ width: '3rem', height: '3rem', marginBottom: '1rem', opacity: 0.3 }} />
-                        <h3>No Churches Found</h3>
+                        <h3>No Church(es) Found</h3>
                         <p>Try adjusting your search.</p>
                     </div>
                 )}

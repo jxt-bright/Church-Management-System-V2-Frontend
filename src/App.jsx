@@ -22,6 +22,8 @@ import EditGroup from './pages/EditGroup.jsx'
 import EditChurch from './pages/EditChurch.jsx'
 import EditUser from './pages/EditUser.jsx'
 import EditMember from './pages/EditMember.jsx'
+import Attendance from './pages/Attendance.jsx'
+
 
 
 
@@ -46,6 +48,7 @@ const App = () => {
                 <Route path="/church/edit/:id" element={ <Layout> <EditChurch /> </Layout> } />
                 <Route path="/user/edit/:id" element={ <Layout> <EditUser /> </Layout> } />
                 <Route path="/member/edit/:id" element={ <Layout> <EditMember /> </Layout> } />
+                <Route path="/attendance" element={ <Layout> <Attendance /> </Layout> } />
             </Routes>
         </>
     )

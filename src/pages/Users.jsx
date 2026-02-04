@@ -200,7 +200,7 @@ const UsersView = () => {
             ) : users.length === 0 ? (
               <div className="empty-state" style={{ padding: '3rem' }}>
                 <User style={{ width: '3rem', height: '3rem', margin: '0 auto 1rem', opacity: 0.3 }} />
-                <h3>No Users Found</h3>
+                <h3>No User(s) Found</h3>
                 <p>Try adjusting your search or add a new user</p>
               </div>
             ) : (

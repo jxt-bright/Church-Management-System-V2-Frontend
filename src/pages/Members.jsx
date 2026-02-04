@@ -181,7 +181,7 @@ const MembersView = () => {
             ) : members.length === 0 ? (
               <div className="empty-state" style={{ padding: '3rem' }}>
                 <Users style={{ width: '3rem', height: '3rem', opacity: 0.3 }} />
-                <h3>No Members Found</h3>
+                <h3>No Member(s) Found</h3>
                 <p>Try adjusting your search</p>
               </div>
             ) : (
