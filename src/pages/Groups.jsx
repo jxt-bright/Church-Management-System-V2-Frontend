@@ -31,7 +31,7 @@ const GroupsView = () => {
     useEffect(() => {
         // const delayDebounceFn = setTimeout(() => {
         //     fetchGroups();
-        // }, 350);
+        // }, 0);
         fetchGroups();
         // return () => clearTimeout(delayDebounceFn);
     }, [currentPage, searchTerm]);
@@ -127,7 +127,6 @@ const GroupsView = () => {
                     }
 
                 } catch (error) {
-                    console.error("Delete error:", error);
                     Swal.fire(
                         "Error",
                         error.response?.data?.message || "Failed to delete group.",

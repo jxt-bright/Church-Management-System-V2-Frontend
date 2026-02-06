@@ -37,7 +37,7 @@ const MembersView = () => {
   useEffect(() => {
     // const delay = setTimeout(() => {
     //   fetchMembers();
-    // }, 350);
+    // }, 0);
     fetchMembers();
     // return () => clearTimeout(delay);
   }, [currentPage, searchTerm]);
@@ -118,7 +118,6 @@ const MembersView = () => {
             fetchMembers();
           }
         } catch (error) {
-          console.error("Delete error:", error);
           Swal.fire(
             "Error",
             error.response?.data?.message || "Failed to delete member.",

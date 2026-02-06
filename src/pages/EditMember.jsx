@@ -69,7 +69,6 @@ const MemberEditPage = () => {
                         const churchList = Array.isArray(churchResponse) ? churchResponse : (churchResponse.churches || churchResponse.data || []);
                         setChurches(churchList);
                     } catch (churchError) {
-                        console.error("Failed to load churches for dropdown", churchError);
                     }
                 }
 

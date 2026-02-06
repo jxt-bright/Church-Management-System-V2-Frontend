@@ -76,7 +76,7 @@ const SpecialServiceList = () => {
           setIsSearching(false);
         }
       }
-    }, 300);
+    }, 0);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, canSearch]);
 

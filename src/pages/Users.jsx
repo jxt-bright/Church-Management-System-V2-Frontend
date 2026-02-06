@@ -42,7 +42,7 @@ const UsersView = () => {
     //   if (user) {
     //     fetchUsers();
     //   }
-    // }, 350);
+    // }, 0);
     fetchUsers();
     // return () => clearTimeout(delayDebounceFn);
   }, [currentPage, searchTerm, user]);
@@ -138,7 +138,6 @@ const UsersView = () => {
             fetchUsers();
           }
         } catch (error) {
-          console.error("Delete error:", error);
           Swal.fire(
             "Error",
             error.response?.data?.message || "Failed to delete user.",

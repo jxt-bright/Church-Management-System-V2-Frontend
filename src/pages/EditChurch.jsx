@@ -106,7 +106,6 @@ const ChurchEditPage = () => {
       setGroups(groupData);
       if (groupData.length > 0) setShowResults(true);
     } catch (error) {
-      // console.error("Group search error", error);
     }
   };
 
@@ -115,7 +114,7 @@ const ChurchEditPage = () => {
     //   if (searchTerm && user?.status === 'manager') {
     //     fetchGroups();
     //   }
-    // }, 350);
+    // }, 0);
     fetchGroups();
     // return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, user]);

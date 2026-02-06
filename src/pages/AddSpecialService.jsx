@@ -67,7 +67,7 @@ const SpecialServiceForm = () => {
           setIsLoading(false);
         }
       }
-    }, 300);
+    }, 0);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, canSearch]);
 

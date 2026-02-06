@@ -102,7 +102,6 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
             setIsCropping(false);
             setImageSrc(null);
         } catch (e) {
-            console.error(e);
         }
     };
 

@@ -27,7 +27,6 @@ const MemberDetails = () => {
         setMember(data);
         setError(null);
       } catch (err) {
-        console.error("Error fetching member:", err);
         setError('Failed to load member details. Please try again.');
       } finally {
         setLoading(false);
@@ -78,7 +77,6 @@ const MemberDetails = () => {
           // Redirect to members list
           navigate('/members'); 
         } catch (err) {
-          console.error("Delete error:", err);
           Swal.fire("Error", "Failed to delete member.", "error");
         }
       }

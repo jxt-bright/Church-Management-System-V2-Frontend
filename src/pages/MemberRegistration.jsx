@@ -63,7 +63,6 @@ const MemberRegistration = () => {
           const churchList = Array.isArray(response) ? response : (response.churches || response.data || []);
           setChurches(churchList);
         } catch (error) {
-          console.error('Failed to load churches', error);
         }
       }
 

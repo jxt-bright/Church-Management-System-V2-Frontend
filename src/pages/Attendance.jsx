@@ -64,7 +64,6 @@ const AttendanceTracker = () => {
         });
         setAttendanceData(formattedData);
       } catch (error) {
-        console.error("Failed to fetch attendance:", error);
       } finally {
         setIsFetchingData(false);
       }
@@ -121,13 +120,12 @@ const AttendanceTracker = () => {
           let data = Array.isArray(response) ? response : (response.churches || response.data || []);
           setSearchResults(data);
         } catch (error) {
-          console.error("Search failed", error);
           setSearchResults([]);
         } finally {
           setIsLoading(false);
         }
       }
-    }, 300);
+    }, 0);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, canSearch]);
 

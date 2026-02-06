@@ -135,9 +135,6 @@ const EditUser = () => {
       setFlash({ message: 'User updated successfully', type: 'success' });
 
       // Redirect after success
-      // setTimeout(() => {
-      //    navigate('/users'); 
-      // }, 1500);
       navigate('/users', {
         state: {
           flashMessage: response.message || 'User updated successfully!',
@@ -190,7 +187,7 @@ const EditUser = () => {
     //   if (searchTerm) {
     //     fetchMembers();
     //   }
-    // }, 350);
+    // }, 0);
     fetchMembers();
 
     // return () => clearTimeout(delayDebounceFn);

@@ -33,7 +33,7 @@ const ChurchesView = () => {
     useEffect(() => {
         // const delayDebounceFn = setTimeout(() => {
         //     fetchChurches();
-        // }, 350);
+        // }, 0);
         fetchChurches();
         // return () => clearTimeout(delayDebounceFn);
     }, [currentPage, searchTerm]);
@@ -132,7 +132,6 @@ const ChurchesView = () => {
                         fetchChurches();
                     }
                 } catch (error) {
-                    console.error("Delete error:", error);
                     Swal.fire(
                         "Error",
                         error.response?.data?.message || "Failed to delete church.",

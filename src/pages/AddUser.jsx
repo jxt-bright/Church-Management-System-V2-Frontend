@@ -165,7 +165,7 @@ const AddUser = () => {
     //   if (searchTerm) {
     //     fetchMembers();
     //   }
-    // }, 350);
+    // }, 0);
     if (searchTerm) {
       fetchMembers();
     }

@@ -176,7 +176,7 @@ const AddChurch = () => {
         //     if (searchTerm && user?.status === 'manager') {
         //         fetchGroups();
         //     }
-        // }, 350);
+        // }, 0);
         if (searchTerm && user?.status === 'manager') {
             fetchGroups();
         }
