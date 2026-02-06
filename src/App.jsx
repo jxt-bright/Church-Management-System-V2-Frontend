@@ -23,6 +23,8 @@ import EditChurch from './pages/EditChurch.jsx'
 import EditUser from './pages/EditUser.jsx'
 import EditMember from './pages/EditMember.jsx'
 import Attendance from './pages/Attendance.jsx'
+import AddSpecialService from './pages/AddSpecialService.jsx'
+import SpecialServices from './pages/SpecialServices.jsx'
 
 
 
@@ -49,6 +51,8 @@ const App = () => {
                 <Route path="/user/edit/:id" element={ <Layout> <EditUser /> </Layout> } />
                 <Route path="/member/edit/:id" element={ <Layout> <EditMember /> </Layout> } />
                 <Route path="/attendance" element={ <Layout> <Attendance /> </Layout> } />
+                <Route path="/addspecialservice" element={ <Layout> <AddSpecialService/> </Layout> } />
+                <Route path="/specialservices" element={ <Layout> <SpecialServices /> </Layout> } />
             </Routes>
         </>
     )

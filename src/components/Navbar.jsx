@@ -45,8 +45,8 @@ const Navbar = ({ onToggle }) => {
     const path = location.pathname;
     setOpenMenus({
       registration: ['/addgroup', '/addchurch', '/adduser', '/addmember'].includes(path),
-      views: ['/groups', '/churches', '/members', '/users', '/attendance'].includes(path),
-      specialService: ['/attendance/specialService', '/attendance/specialServiceTable'].includes(path),
+      views: ['/groups', '/churches', '/members', '/users'].includes(path),
+      specialService: [ '/attendance', '/addspecialservice', '/specialservices'].includes(path),
       reports: ['/attendance/monthlyreport', '/attendance/report'].includes(path),
     });
 
@@ -191,7 +191,7 @@ const Navbar = ({ onToggle }) => {
               {/* Views */}
               <li className={`nav-item ${openMenus.views ? 'menu-open' : ''}`}>
                 <a href="#"
-                  className={`nav-link ${isParentActive(['/groups', '/churches', '/members', '/users', '/attendance'])}`}
+                  className={`nav-link ${isParentActive(['/groups', '/churches', '/members', '/users'])}`}
                   onClick={(e) => { e.preventDefault(); toggleMenu('views'); }}>
                   <i className="nav-icon bi bi-view-list me-2"></i>
                   <p className="d-inline">
@@ -232,14 +232,14 @@ const Navbar = ({ onToggle }) => {
                       </Link>
                     </li>
                   </RequireAccess>
-                  <RequireAccess minStatus="churchAdmin">
+                  {/* <RequireAccess minStatus="churchAdmin">
                     <li className="nav-item">
                       <Link to="/attendance" className={`nav-link d-flex align-items-center ${isActive('/attendance')}`} onClick={handleMobileLinkClick}>
                         <i className="nav-icon bi bi-table me-2"></i>
                         <p className="mb-0">Attendance</p>
                       </Link>
                     </li>
-                  </RequireAccess>
+                  </RequireAccess> */}
                 </ul>
               </li>
 
@@ -249,25 +249,31 @@ const Navbar = ({ onToggle }) => {
               <RequireAccess minStatus="churchAdmin">
                 <li className={`nav-item ${openMenus.specialService ? 'menu-open' : ''}`}>
                   <a href="#"
-                    className={`nav-link ${isParentActive(['/attendance/specialService', '/attendance/specialServiceTable'])}`}
+                    className={`nav-link ${isParentActive(['/addspecialservice', '/specialservices', '/attendance'])}`}
                     onClick={(e) => { e.preventDefault(); toggleMenu('specialService'); }}>
-                    <i className="nav-icon bi bi-stars me-2"></i>
+                    <i className="nav-icon bi bi-journal-bookmark me-2"></i>
                     <p className="d-inline">
-                      Special Service
+                      Service Records
                       <i className={`nav-arrow bi ${openMenus.specialService ? 'bi-chevron-down' : 'bi-chevron-right'} float-end`}></i>
                     </p>
                   </a>
                   <ul className="nav nav-treeview ms-3 flex-column" style={{ display: openMenus.specialService ? 'block' : 'none' }}>
                     <li className="nav-item">
-                      <Link to="/home" className={`nav-link d-flex align-items-center ${isActive('/attendance/specialService')}`} onClick={handleMobileLinkClick}>
-                        <i className="nav-icon bi bi-plus-circle me-2"></i>
-                        <p className="mb-0">Service</p>
+                      <Link to="/attendance" className={`nav-link d-flex align-items-center ${isActive('/attendance')}`} onClick={handleMobileLinkClick}>
+                        <i className="nav-icon bi bi-table me-2"></i>
+                        <p className="mb-0">Attendance</p>
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link to="/home" className={`nav-link d-flex align-items-center ${isActive('/attendance/specialServiceTable')}`} onClick={handleMobileLinkClick}>
+                      <Link to="/addspecialservice" className={`nav-link d-flex align-items-center ${isActive('/addspecialservice')}`} onClick={handleMobileLinkClick}>
+                        <i className="nav-icon bi bi-plus-circle me-2"></i>
+                        <p className="mb-0">Add Special Service</p>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link to="/specialservices" className={`nav-link d-flex align-items-center ${isActive('/specialservices')}`} onClick={handleMobileLinkClick}>
                         <i className="nav-icon bi bi-list-task me-2"></i>
-                        <p className="mb-0">View</p>
+                        <p className="mb-0">View Special Service</p>
                       </Link>
                     </li>
                   </ul>
