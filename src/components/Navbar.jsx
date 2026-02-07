@@ -41,17 +41,16 @@ const Navbar = ({ onToggle }) => {
     }));
   };
 
-  // Integrated Logout Handler
+  // Logout Handler
   const handleLogout = async (e) => {
     e.preventDefault();
     try {
-      handleMobileLinkClick(); // Close sidebar if on mobile
+      handleMobileLinkClick();
       await logout();          // Calls backend and clears local auth state
-      // navigate("/");           // Redirect to landing/login
+      // Redirect to login
       window.location.replace("/");
     } catch (error) {
       window.location.replace("/");
-      // navigate("/"); 
     }
   };
 
@@ -82,7 +81,7 @@ const Navbar = ({ onToggle }) => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [location.pathname, onToggle]); // Added onToggle to dependency array for best practice
+  }, [location.pathname, onToggle]);
 
   const toggleSidebar = (e) => {
     e.preventDefault();
@@ -100,7 +99,7 @@ const Navbar = ({ onToggle }) => {
 
   return (
     <>
-      {/* --- Top Navbar --- */}
+      {/* Top Navbar */}
       <nav
         className="app-header navbar navbar-expand bg-light fixed-top border-bottom"
         style={{
@@ -119,7 +118,7 @@ const Navbar = ({ onToggle }) => {
         </div>
       </nav>
 
-      {/* --- Sidebar --- */}
+      {/* Sidebar */}
       <aside
         className="app-sidebar bg-body-secondary shadow"
         data-bs-theme="dark"
