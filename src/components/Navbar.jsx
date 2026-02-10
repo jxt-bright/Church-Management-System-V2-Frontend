@@ -1,16 +1,20 @@
+
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import church_logo from '../assets/images/church_logo.png';
 import '../assets/styles/Navbar.css';
 import RequireAccess from './RequireAccess.jsx';
+import { useAuth } from "../context/AuthContext.jsx";
 
 const Navbar = ({ onToggle }) => {
-  const BREAKPOINT = 992;
+  const { logout } = useAuth(); 
   const location = useLocation();
+  const navigate = useNavigate();
+  const BREAKPOINT = 992;
 
   const [isOpen, setIsOpen] = useState(window.innerWidth >= BREAKPOINT);
   const [isMobile, setIsMobile] = useState(window.innerWidth < BREAKPOINT);
-
+  
   const [openMenus, setOpenMenus] = useState({
     registration: false,
     views: false,
@@ -38,6 +42,19 @@ const Navbar = ({ onToggle }) => {
     }));
   };
 
+  // Logout Handler
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    try {
+      handleMobileLinkClick();
+      await logout();
+      // Redirect to login
+      window.location.replace("/");
+    } catch (error) {
+      window.location.replace("/");
+    }
+  };
+
   useEffect(() => {
     if (onToggle) onToggle(isOpen);
 
@@ -46,7 +63,7 @@ const Navbar = ({ onToggle }) => {
     setOpenMenus({
       registration: ['/addgroup', '/addchurch', '/adduser', '/addmember'].includes(path),
       views: ['/groups', '/churches', '/members', '/users'].includes(path),
-      specialService: [ '/attendance', '/addspecialservice', '/specialservices'].includes(path),
+      specialService: ['/attendance', '/addspecialservice', '/specialservices'].includes(path),
       reports: ['/attendance/monthlyreport', '/attendance/report'].includes(path),
     });
 
@@ -65,7 +82,7 @@ const Navbar = ({ onToggle }) => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [location.pathname]);
+  }, [location.pathname, onToggle]);
 
   const toggleSidebar = (e) => {
     e.preventDefault();
@@ -83,7 +100,7 @@ const Navbar = ({ onToggle }) => {
 
   return (
     <>
-      {/* --- Top Navbar --- */}
+      {/* Top Navbar */}
       <nav
         className="app-header navbar navbar-expand bg-light fixed-top border-bottom"
         style={{
@@ -98,17 +115,11 @@ const Navbar = ({ onToggle }) => {
                 <i className="bi bi-list"></i>
               </a>
             </li>
-            {/* <li className="nav-item d-none d-md-block">
-              <Link to="/" className="nav-link">Home</Link>
-            </li>
-            <li className="nav-item d-none d-md-block">
-              <Link to="/contact" className="nav-link">Contact</Link>
-            </li> */}
           </ul>
         </div>
       </nav>
 
-      {/* --- Sidebar --- */}
+      {/* Sidebar */}
       <aside
         className="app-sidebar bg-body-secondary shadow"
         data-bs-theme="dark"
@@ -232,14 +243,6 @@ const Navbar = ({ onToggle }) => {
                       </Link>
                     </li>
                   </RequireAccess>
-                  {/* <RequireAccess minStatus="churchAdmin">
-                    <li className="nav-item">
-                      <Link to="/attendance" className={`nav-link d-flex align-items-center ${isActive('/attendance')}`} onClick={handleMobileLinkClick}>
-                        <i className="nav-icon bi bi-table me-2"></i>
-                        <p className="mb-0">Attendance</p>
-                      </Link>
-                    </li>
-                  </RequireAccess> */}
                 </ul>
               </li>
 
@@ -313,16 +316,20 @@ const Navbar = ({ onToggle }) => {
 
               <hr className="sidebar-divider my-2 border-secondary opacity-50" />
 
-              <li className="nav-header fw-bold text-uppercase mt-2 ps-3 text-light">Settings</li>
               <RequireAccess minStatus="churchAdmin">
                 <li className="nav-item">
-                  <Link to="/home" className={`nav-link d-flex align-items-center ${isActive('/member/sendMessagePage')}`} onClick={handleMobileLinkClick}>
+                  <Link to="/messages" className={`nav-link d-flex align-items-center ${isActive('/messages')}`} onClick={handleMobileLinkClick}>
                     <i className="nav-icon bi bi-envelope-arrow-up me-2"></i>
                     <p className="mb-0">Send Message</p>
                   </Link>
                 </li>
+                {/* Final Integrated Logout Link */}
                 <li className="nav-item">
-                  <Link to="/home" className="nav-link text-danger d-flex align-items-center" onClick={handleMobileLinkClick}>
+                  <Link 
+                    to="" 
+                    className="nav-link text-danger d-flex align-items-center" 
+                    onClick={handleLogout}
+                  >
                     <i className="nav-icon bi bi-box-arrow-right me-2"></i>
                     <p className="mb-0">Logout</p>
                   </Link>
