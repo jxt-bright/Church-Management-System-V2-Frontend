@@ -25,7 +25,7 @@ import EditMember from './pages/EditMember.jsx'
 import Attendance from './pages/Attendance.jsx'
 import AddSpecialService from './pages/AddSpecialService.jsx'
 import SpecialServices from './pages/SpecialServices.jsx'
-
+import Report from './pages/Report.jsx'
 
 
 
@@ -53,6 +53,7 @@ const App = () => {
                 <Route path="/attendance" element={ <Layout> <Attendance /> </Layout> } />
                 <Route path="/addspecialservice" element={ <Layout> <AddSpecialService/> </Layout> } />
                 <Route path="/specialservices" element={ <Layout> <SpecialServices /> </Layout> } />
+                <Route path="/report" element={ <Layout> <Report /> </Layout> } />
             </Routes>
         </>
     )
