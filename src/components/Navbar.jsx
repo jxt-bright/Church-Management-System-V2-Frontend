@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import church_logo from '../assets/images/church_logo.png';
 import '../assets/styles/Navbar.css';
-import RequireAccess from './RequireAccess.jsx';
-import { useAuth } from "../context/AuthContext.jsx"; // Integrated useAuth hook
+import { RequireAccess } from './RequireAccess.jsx';
+import { useAuth } from "../context/AuthContext.jsx";
 
 const Navbar = ({ onToggle }) => {
-  const { logout } = useAuth(); // Destructure logout from Context
+  const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const BREAKPOINT = 992;
@@ -46,7 +46,7 @@ const Navbar = ({ onToggle }) => {
     e.preventDefault();
     try {
       handleMobileLinkClick();
-      await logout();          // Calls backend and clears local auth state
+      await logout();
       // Redirect to login
       window.location.replace("/");
     } catch (error) {
@@ -318,7 +318,7 @@ const Navbar = ({ onToggle }) => {
               <li className="nav-header fw-bold text-uppercase mt-2 ps-3 text-light">Settings</li>
               <RequireAccess minStatus="churchAdmin">
                 <li className="nav-item">
-                  <Link to="/home" className={`nav-link d-flex align-items-center ${isActive('/member/sendMessagePage')}`} onClick={handleMobileLinkClick}>
+                  <Link to="/messages" className={`nav-link d-flex align-items-center ${isActive('/messages')}`} onClick={handleMobileLinkClick}>
                     <i className="nav-icon bi bi-envelope-arrow-up me-2"></i>
                     <p className="mb-0">Send Message</p>
                   </Link>
@@ -326,7 +326,7 @@ const Navbar = ({ onToggle }) => {
                 {/* Final Integrated Logout Link */}
                 <li className="nav-item">
                   <Link 
-                    to="/" 
+                    to="" 
                     className="nav-link text-danger d-flex align-items-center" 
                     onClick={handleLogout}
                   >
