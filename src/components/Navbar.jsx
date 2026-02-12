@@ -315,7 +315,6 @@ const Navbar = ({ onToggle }) => {
 
               <hr className="sidebar-divider my-2 border-secondary opacity-50" />
 
-              <li className="nav-header fw-bold text-uppercase mt-2 ps-3 text-light">Settings</li>
               <RequireAccess minStatus="churchAdmin">
                 <li className="nav-item">
                   <Link to="/messages" className={`nav-link d-flex align-items-center ${isActive('/messages')}`} onClick={handleMobileLinkClick}>

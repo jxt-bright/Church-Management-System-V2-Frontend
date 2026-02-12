@@ -25,6 +25,7 @@ import EditMember from './pages/EditMember.jsx';
 import Attendance from './pages/Attendance.jsx';
 import AddSpecialService from './pages/AddSpecialService.jsx';
 import SpecialServices from './pages/SpecialServices.jsx';
+import SendMessage from './pages/SendMessage.jsx';
 
 
 
@@ -34,7 +35,7 @@ const App = () => {
             <Route path="/" element={<Login />} />
             <Route path="/resetpassword" element={<ResetPassword />} />
 
-            {/* --- Protected Routes --- */}
+            {/* Protected Routes */}
 
             <Route path="/home" element={
                 <ProtectedRoute minStatus="churchAdmin">
@@ -86,7 +87,7 @@ const App = () => {
                 </ProtectedRoute>
             } />
 
-            {/* Details & Edit Routes */}
+            {/* Details and Edit Routes */}
             <Route path="/member/:id" element={
                 <ProtectedRoute minStatus="churchAdmin">
                     <Layout> <MemberDetails /> </Layout>
@@ -113,7 +114,7 @@ const App = () => {
                 </ProtectedRoute>
             } />
 
-            {/* Service & Attendance Records */}
+            {/* Service and Attendance Records */}
             <Route path="/attendance" element={
                 <ProtectedRoute minStatus="churchAdmin">
                     <Layout> <Attendance /> </Layout>
@@ -127,6 +128,13 @@ const App = () => {
             <Route path="/specialservices" element={
                 <ProtectedRoute minStatus="churchAdmin">
                     <Layout> <SpecialServices /> </Layout>
+                </ProtectedRoute>
+            } />
+
+            {/* Send Messages */}
+            <Route path="/messages" element={
+                <ProtectedRoute minStatus="churchAdmin">
+                    <Layout> <SendMessage /> </Layout>
                 </ProtectedRoute>
             } />
 
