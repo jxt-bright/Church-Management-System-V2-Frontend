@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   UserCheck, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Calendar, Save, Trash2, ChevronDown, ChevronUp, AlertCircle, Users,
-  Search, X, Building2, MapPin, CheckCircle
+  Search, X, Building2, CheckCircle2
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import FlashMessage from '../components/FlashMessage';
@@ -10,7 +10,105 @@ import attendanceService from '../services/attendanceService.js';
 import churchService from '../services/churchService.js';
 import { useAuth } from '../context/AuthContext';
 import '../assets/styles/Attendance.css';
+import '../assets/styles/SendMessage.css'; 
 
+/* =========================
+   SearchSelect Component 
+========================= */
+function SearchSelect({ options, value, onChange, placeholder, disabled, icon: Icon, label, isLoading }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  const handleSelect = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div className={`search-select-wrapper ${disabled ? 'disabled' : ''}`} ref={wrapperRef}>
+      <div
+        className={`search-select-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <div className="trigger-content">
+          {Icon && <Icon size={16} strokeWidth={1.5} />}
+          <span className={value ? 'selected-text' : 'placeholder-text'}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+        </div>
+        <div className="trigger-icons">
+          {value && !disabled && (
+            <button
+              type="button"
+              className="clear-btn"
+              onClick={(e) => { e.stopPropagation(); handleSelect(null); }}
+            >
+              <X size={14} />
+            </button>
+          )}
+          <ChevronDown size={16} className={`chevron ${isOpen ? 'rotated' : ''}`} />
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="search-select-dropdown">
+          <div className="search-box">
+            <Search size={16} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={`Search ${label.toLowerCase()}...`}
+              className="search-input-field"
+              autoFocus
+            />
+          </div>
+          <div className="options-list">
+            {isLoading ? (
+              <div className="no-results">Loading...</div>
+            ) : filteredOptions.length > 0 ? (
+              filteredOptions.map(option => (
+                <div
+                  key={option.value}
+                  className={`option-item ${option.value === value ? 'selected' : ''}`}
+                  onClick={() => handleSelect(option.value)}
+                >
+                  {option.label}
+                  {option.value === value && <CheckCircle2 size={16} />}
+                </div>
+              ))
+            ) : (
+              <div className="no-results">No results found for "{searchTerm}"</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================
+   Main Component
+========================= */
 const AttendanceTracker = () => {
   const { user } = useAuth();
 
@@ -21,17 +119,15 @@ const AttendanceTracker = () => {
   const [mainFlash, setMainFlash] = useState({ message: '', type: '' });
   const [isFetchingData, setIsFetchingData] = useState(false);
 
+  // Search State
   const [selectedChurch, setSelectedChurch] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
+  const [churches, setChurches] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  const resultsRef = useRef(null);
 
   const userStatus = user?.status?.toLowerCase() || '';
   const canSearch = ['manager', 'grouppastor', 'groupadmin'].includes(userStatus);
 
+  // Auto-select church for local pastors/admins
   useEffect(() => {
     if (user && !canSearch) {
       if (user.churchId) {
@@ -44,6 +140,7 @@ const AttendanceTracker = () => {
     }
   }, [user, canSearch]);
 
+  // Fetch Attendance for the selected church
   useEffect(() => {
     const fetchMonthlyAttendance = async () => {
       if (!selectedChurch?._id) return;
@@ -64,6 +161,7 @@ const AttendanceTracker = () => {
         });
         setAttendanceData(formattedData);
       } catch (error) {
+        console.error("Attendance fetch error:", error);
       } finally {
         setIsFetchingData(false);
       }
@@ -71,84 +169,43 @@ const AttendanceTracker = () => {
     fetchMonthlyAttendance();
   }, [selectedChurch, currentDate]);
 
-  const highlightText = (text) => {
-    if (!searchTerm) return text;
-    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-    return parts.map((part, i) =>
-      part.toLowerCase() === searchTerm.toLowerCase()
-        ? <span key={i} className="highlight">{part}</span>
-        : part
-    );
-  };
-
-  const getInitials = (item) => {
-    if (!item?.name) return 'C';
-    const words = item.name.trim().split(/\s+/);
-    return words.length >= 2
-      ? (words[0][0] + words[1][0]).toUpperCase()
-      : item.name.substring(0, 2).toUpperCase();
-  };
-
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return {
-      daysInMonth: new Date(year, month + 1, 0).getDate(),
-      startingDayOfWeek: new Date(year, month, 1).getDay()
-    };
-  };
-
-  const formatDateKey = (date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
-
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setShowResults(value.trim() !== '');
-    if (!value.trim()) setSearchResults([]);
-  };
-
+  // Initial Fetch of Churches for SearchSelect
   useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchTerm && canSearch) {
+    const loadChurches = async () => {
+      if (canSearch) {
         setIsLoading(true);
         try {
-          const response = await churchService.getChurches({ search: searchTerm });
-          let data = Array.isArray(response) ? response : (response.churches || response.data || []);
-          setSearchResults(data);
+          const response = await churchService.getChurches();
+          const data = Array.isArray(response) ? response : (response.churches || response.data || []);
+          setChurches(data);
         } catch (error) {
-          setSearchResults([]);
+          setChurches([]);
         } finally {
           setIsLoading(false);
         }
       }
-    }, 0);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, canSearch]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (resultsRef.current && !resultsRef.current.contains(e.target)) {
-        setShowResults(false);
-      }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    loadChurches();
+  }, [canSearch]);
 
-  const handleSelectChurch = (church) => {
+  const churchOptions = churches.map(c => ({
+    value: c._id,
+    label: c.name || c.churchname
+  }));
+
+  const handleSelectChurch = (churchId) => {
+    if (!churchId) {
+      setSelectedChurch(null);
+      setAttendanceData({});
+      return;
+    }
+    const church = churches.find(c => c._id === churchId);
     setSelectedChurch(church);
-    setSearchTerm('');
-    setShowResults(false);
     setAttendanceData({});
   };
 
-  const handleRemoveChurch = () => {
-    setSelectedChurch(null);
-    setAttendanceData({});
+  const formatDateKey = (date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
   const handleDateClick = (day) => {
@@ -210,11 +267,22 @@ const AttendanceTracker = () => {
   const changeYear = (delta) => setCurrentDate(new Date(currentDate.getFullYear() + delta, currentDate.getMonth(), 1));
   const goToToday = () => setCurrentDate(new Date());
 
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return {
+      daysInMonth: new Date(year, month + 1, 0).getDate(),
+      startingDayOfWeek: new Date(year, month, 1).getDay()
+    };
+  };
+
   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate);
   const isToday = (day) => {
     const today = new Date();
     return today.getDate() === day && today.getMonth() === currentDate.getMonth() && today.getFullYear() === currentDate.getFullYear();
   };
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   if (currentView === 'form' && selectedDate) {
     const existingData = attendanceData[selectedDate.key];
@@ -262,82 +330,16 @@ const AttendanceTracker = () => {
         </div>
 
         {canSearch && (
-          <div className="max-w-lg mx-auto mb-8 search-container" ref={resultsRef}>
-            <div className="search-input-wrapper">
-              <Search className="search-icon" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onFocus={() => searchTerm && setShowResults(true)}
-                placeholder="Search for a church..."
-                className="search-input"
-                autoComplete="off"
-              />
-              
-              {showResults && (
-                <div className="search-dropdown animate-fadeIn">
-                  {searchResults.length === 0 ? (
-                    <div className="dropdown-empty">
-                      {isLoading ? <><span className="custom-spinner me-2"></span>Searching...</> : 'No church found.'}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col bg-white overflow-hidden">
-                      {searchResults.map((church) => (
-                        <div
-                          key={church._id}
-                          onClick={() => handleSelectChurch(church)}
-                          className="p-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0 transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-[10px] shrink-0">
-                            {getInitials(church)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-slate-800 truncate">
-                              {highlightText(church.name)}
-                            </div>
-                            <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                              <MapPin size={10} className="text-slate-400" />
-                              <span className="truncate">{church.location || 'No location'}</span>
-                            </div>
-                          </div>
-                          {selectedChurch?._id === church._id && (
-                            <CheckCircle size={14} className="text-green-500 shrink-0" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {selectedChurch && (
-              <div className="flex items-center justify-between p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl animate-fadeIn shadow-sm mt-4 relative">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                    {getInitials(selectedChurch)}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-bold text-slate-800 leading-tight truncate">
-                      {selectedChurch.name}
-                    </div>
-                    <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                      <MapPin size={12} className="text-indigo-400 shrink-0" />
-                      <span className="truncate">{selectedChurch.location || 'Location available'}</span>
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  type="button" 
-                  onClick={handleRemoveChurch} 
-                  className="p-2 bg-white hover:bg-red-50 text-red-500 rounded-full shadow-sm border border-slate-100 transition-colors shrink-0"
-                  title="Deselect Church"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
+          <div className="max-w-lg mx-auto mb-8">
+            <SearchSelect
+              options={churchOptions}
+              value={selectedChurch?._id || null}
+              onChange={handleSelectChurch}
+              placeholder="Search and select a church..."
+              icon={Building2}
+              label="Church"
+              isLoading={isLoading}
+            />
           </div>
         )}
 
