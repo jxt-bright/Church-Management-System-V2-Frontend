@@ -1,23 +1,118 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, ClipboardList, Baby, 
-  UserCircle, CheckCircle, Search, X, MapPin 
+  UserCircle, CheckCircle2, Search, X, MapPin, ChevronDown, Building2 
 } from 'lucide-react';
 import churchService from '../services/churchService.js';
 import specialServiece from '../services/specialService.js';
 import { useAuth } from '../context/AuthContext';
 import FlashMessage from '../components/FlashMessage';
+import '../assets/styles/SendMessage.css'; // Importing shared search styles
 
+/* =========================
+   SearchSelect Component 
+========================= */
+function SearchSelect({ options, value, onChange, placeholder, disabled, icon: Icon, label, isLoading }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  const handleSelect = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div className={`search-select-wrapper ${disabled ? 'disabled' : ''}`} ref={wrapperRef}>
+      <div
+        className={`search-select-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <div className="trigger-content">
+          {Icon && <Icon size={16} strokeWidth={1.5} />}
+          <span className={value ? 'selected-text' : 'placeholder-text'}>
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+        </div>
+        <div className="trigger-icons">
+          {value && !disabled && (
+            <button
+              type="button"
+              className="clear-btn"
+              onClick={(e) => { e.stopPropagation(); handleSelect(null); }}
+            >
+              <X size={14} />
+            </button>
+          )}
+          <ChevronDown size={16} className={`chevron ${isOpen ? 'rotated' : ''}`} />
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="search-select-dropdown">
+          <div className="search-box">
+            <Search size={16} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={`Search ${label.toLowerCase()}...`}
+              className="search-input-field"
+              autoFocus
+            />
+          </div>
+          <div className="options-list">
+            {isLoading ? (
+              <div className="no-results">Loading...</div>
+            ) : filteredOptions.length > 0 ? (
+              filteredOptions.map(option => (
+                <div
+                  key={option.value}
+                  className={`option-item ${option.value === value ? 'selected' : ''}`}
+                  onClick={() => handleSelect(option.value)}
+                >
+                  {option.label}
+                  {option.value === value && <CheckCircle2 size={16} />}
+                </div>
+              ))
+            ) : (
+              <div className="no-results">No results found for "{searchTerm}"</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================
+   Main Component
+========================= */
 const SpecialServiceForm = () => {
   const { user } = useAuth();
 
   // Search and Selection State
   const [selectedChurch, setSelectedChurch] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
+  const [churches, setChurches] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const resultsRef = useRef(null);
 
   // Form and UI State
   const [formData, setFormData] = useState({
@@ -45,46 +140,37 @@ const SpecialServiceForm = () => {
     }
   }, [user, canSearch]);
 
-  const getInitials = (item) => {
-    if (!item?.name) return 'C';
-    const words = item.name.trim().split(/\s+/);
-    return words.length >= 2 
-      ? (words[0][0] + words[1][0]).toUpperCase() 
-      : item.name.substring(0, 2).toUpperCase();
-  };
-
+  // Initial Fetch of Churches for SearchSelect
   useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchTerm.trim() && canSearch) {
+    const fetchChurches = async () => {
+      if (canSearch) {
         setIsLoading(true);
         try {
-          const response = await churchService.getChurches({ search: searchTerm });
+          const response = await churchService.getChurches();
           const data = Array.isArray(response) ? response : (response.churches || response.data || []);
-          setSearchResults(data);
+          setChurches(data);
         } catch (error) {
-          setSearchResults([]);
+          setChurches([]);
         } finally {
           setIsLoading(false);
         }
       }
-    }, 0);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, canSearch]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (resultsRef.current && !resultsRef.current.contains(e.target)) {
-        setShowResults(false);
-      }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    fetchChurches();
+  }, [canSearch]);
 
-  const handleSelectChurch = (church) => {
+  const churchOptions = churches.map(c => ({
+    value: c._id,
+    label: c.name || c.churchname
+  }));
+
+  const handleSelectChurch = (churchId) => {
+    if (!churchId) {
+      setSelectedChurch(null);
+      return;
+    }
+    const church = churches.find(c => c._id === churchId);
     setSelectedChurch(church);
-    setSearchTerm(''); 
-    setShowResults(false);
   };
 
   const handleChange = (e) => {
@@ -137,16 +223,6 @@ const SpecialServiceForm = () => {
     }
   };
 
-  const highlightText = (text) => {
-    if (!searchTerm) return text;
-    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-    return parts.map((part, i) =>
-      part.toLowerCase() === searchTerm.toLowerCase()
-        ? <span key={i} className="bg-yellow-200 font-bold">{part}</span>
-        : part
-    );
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       
@@ -168,83 +244,25 @@ const SpecialServiceForm = () => {
         <div className="p-6 md:p-10 space-y-6">
           
           {canSearch && (
-            <div className="space-y-4 relative" ref={resultsRef}>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Search size={16} className="text-indigo-500" />
-                  Search Church
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setShowResults(true); }}
-                    onFocus={() => setShowResults(true)}
-                    placeholder="Search for a church..."
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 transition-all"
-                  />
-                  
-                  {showResults && searchTerm && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-50 animate-fadeIn custom-scrollbar">
-                      {isLoading ? (
-                        <div className="p-4 text-center text-slate-500 text-sm italic">Searching...</div>
-                      ) : searchResults.length > 0 ? (
-                        searchResults.map(church => (
-                          <div 
-                            key={church._id}
-                            onClick={() => handleSelectChurch(church)}
-                            className="p-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
-                          >
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-[10px] shrink-0">
-                              {getInitials(church)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-semibold text-slate-800 truncate">{highlightText(church.name)}</div>
-                              {/* Location Icon added below */}
-                              <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
-                                <MapPin size={10} className="text-slate-400 shrink-0" />
-                                <span className="truncate">{church.location || 'Location not specified'}</span>
-                              </div>
-                            </div>
-                            {selectedChurch?._id === church._id && <CheckCircle size={14} className="text-green-500 shrink-0" />}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-4 text-center text-slate-500 text-sm">No results found</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <Building2 size={16} className="text-indigo-500" />
+                Select Church
+              </label>
 
-              {selectedChurch && (
-                <div className="flex items-center justify-between p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl animate-fadeIn shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-md">
-                      {getInitials(selectedChurch)}
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-800 leading-tight">{selectedChurch.name}</div>
-                      <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                        <MapPin size={12} className="text-indigo-400" />
-                        {selectedChurch.location || 'Location available'}
-                      </div>
-                    </div>
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={() => setSelectedChurch(null)}
-                    className="p-2 bg-white hover:bg-red-50 text-red-500 rounded-full shadow-sm border border-slate-100 transition-colors"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              )}
+              <SearchSelect 
+                options={churchOptions}
+                value={selectedChurch?._id || null}
+                onChange={handleSelectChurch}
+                placeholder="Search and select church..."
+                icon={Building2}
+                label="Church"
+                isLoading={isLoading}
+              />
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={`space-y-6 ${canSearch ? 'pt-2 border-t border-slate-100' : ''}`}>
+          <form onSubmit={handleSubmit} className={`space-y-6 ${canSearch ? 'pt-4 border-t border-slate-100' : ''}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Category</label>
@@ -296,7 +314,7 @@ const SpecialServiceForm = () => {
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                   <div className="spinner-border spinner-border-sm" role="status"></div>
                   Saving...
                 </span>
               ) : 'Save Special Service'}

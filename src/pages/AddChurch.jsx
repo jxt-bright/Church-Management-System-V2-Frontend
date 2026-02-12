@@ -1,15 +1,110 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Building2, MapPin, User, Phone, Mail } from 'lucide-react';
+import { Search, X, Users, CheckCircle2, ChevronDown } from 'lucide-react';
 import churchService from '../services/churchService.js';
 import groupService from '../services/groupService.js';
 import FlashMessage from '../components/FlashMessage';
 import { useAuth } from '../context/AuthContext';
 
+/* =========================
+   SearchSelect Component 
+========================= */
+function SearchSelect({ options, value, onChange, placeholder, disabled, icon: Icon, label, isLoading }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const wrapperRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                setIsOpen(false);
+                setSearchTerm('');
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    const handleSelect = (optionValue) => {
+        onChange(optionValue);
+        setIsOpen(false);
+        setSearchTerm('');
+    };
+
+    return (
+        <div className={`search-select-wrapper ${disabled ? 'disabled' : ''}`} ref={wrapperRef}>
+            <div
+                className={`search-select-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+            >
+                <div className="trigger-content">
+                    {Icon && <Icon size={16} strokeWidth={1.5} />}
+                    <span className={value ? 'selected-text' : 'placeholder-text'}>
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
+                </div>
+                <div className="trigger-icons">
+                    {value && !disabled && (
+                        <button
+                            type="button"
+                            className="clear-btn"
+                            onClick={(e) => { e.stopPropagation(); onChange(null); }}
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
+                    <ChevronDown size={16} className={`chevron ${isOpen ? 'rotated' : ''}`} />
+                </div>
+            </div>
+
+            {isOpen && (
+                <div className="search-select-dropdown">
+                    <div className="search-box">
+                        <Search size={16} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={`Search ${label.toLowerCase()}...`}
+                            className="search-input-field"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="options-list">
+                        {isLoading ? (
+                            <div className="no-results">Loading...</div>
+                        ) : filteredOptions.length > 0 ? (
+                            filteredOptions.map(option => (
+                                <div
+                                    key={option.value}
+                                    className={`option-item ${option.value === value ? 'selected' : ''}`}
+                                    onClick={() => handleSelect(option.value)}
+                                >
+                                    {option.label}
+                                    {option.value === value && <CheckCircle2 size={16} />}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="no-results">No results found for "{searchTerm}"</div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* =========================
+   Main Component
+========================= */
 const AddChurch = () => {
     const { user } = useAuth();
 
-    // Form State
     const [formData, setFormData] = useState({
         name: '',
         location: '',
@@ -19,80 +114,47 @@ const AddChurch = () => {
         groupId: ''
     });
 
-    // Search State
-    const [searchTerm, setSearchTerm] = useState('');
     const [groups, setGroups] = useState([]);
-    const [selectedGroup, setSelectedGroup] = useState(null);
-    const [showResults, setShowResults] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [flash, setFlash] = useState({ message: '', type: '' });
 
-    const resultsRef = useRef(null);
+    useEffect(() => {
+        const fetchInitialGroups = async () => {
+            if (user?.status === 'manager') {
+                setIsLoading(true);
+                try {
+                    const response = await groupService.getGroups();
+                    const groupData = response.groups || response.data || response || [];
+                    setGroups(Array.isArray(groupData) ? groupData : []);
+                } catch (error) {
+                    setFlash({ message: 'Error loading groups.', type: 'danger' });
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        };
+        if (user) fetchInitialGroups();
+    }, [user]);
 
-    // Helper Functions
-    const highlightText = (text) => {
-        if (!searchTerm) return text;
-        const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-        return parts.map((part, i) =>
-            part.toLowerCase() === searchTerm.toLowerCase()
-                ? <span key={i} style={{ backgroundColor: '#fef08a', fontWeight: 'bold' }}>{part}</span>
-                : part
-        );
-    };
+    const groupOptions = groups.map(g => ({ value: g._id, label: g.name }));
 
-    const getInitials = (group) => {
-        if (!group?.name) return 'G';
-        const words = group.name.split(' ');
-        if (words.length >= 2) {
-            return (words[0][0] + words[1][0]).toUpperCase();
-        }
-        return group.name.substring(0, 2).toUpperCase();
-    };
-
-    // Handlers
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSearchChange = (e) => {
-        const value = e.target.value;
-        setSearchTerm(value);
-        setShowResults(value.trim() !== '');
-        if (!value.trim()) {
-            setGroups([]);
-        }
-    };
-
-    const handleGroupSelect = (group) => {
-        setSelectedGroup(group);
-        setFormData(prev => ({ ...prev, groupId: group._id }));
-        setSearchTerm('');
-        setShowResults(false);
-    };
-
-    const handleRemoveGroup = () => {
-        setSelectedGroup(null);
-        setFormData(prev => ({ ...prev, groupId: '' }));
+    const handleGroupChange = (val) => {
+        setFormData(prev => ({ ...prev, groupId: val }));
     };
 
     const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (isLoading) return;
+
+        setIsLoading(true);
+
         try {
-            e.preventDefault();
-
-            if (isLoading) return;
-            setIsLoading(true);
-
-            // Determine the correct Group ID based on role
-            let targetGroupId;
-
-            if (user?.status === 'manager') {
-                // Manager: Use the ID from search selection
-                targetGroupId = formData.groupId;
-            } else {
-                // Group Admin/Pastor: Use their own assigned Group ID
-                targetGroupId = user?.groupId;
-            }
+            let targetGroupId = user?.status === 'manager' ? formData.groupId : user?.groupId;
 
             if (!targetGroupId) {
                 setFlash({ message: 'Please select a group', type: 'danger' });
@@ -100,20 +162,11 @@ const AddChurch = () => {
                 return;
             }
 
-            const submitData = {
-                name: formData.name,
-                location: formData.location,
-                pastor: formData.pastor,
-                phoneNumber: formData.phoneNumber,
-                email: formData.email,
-                groupId: targetGroupId
-            };
-
+            const submitData = { ...formData, groupId: targetGroupId };
             const response = await churchService.addChurch(submitData);
 
             setFlash({ message: response.message || 'Church created successfully!', type: 'success' });
 
-            // Reset form
             setFormData({
                 name: '',
                 location: '',
@@ -122,8 +175,6 @@ const AddChurch = () => {
                 email: '',
                 groupId: ''
             });
-            setSelectedGroup(null);
-            setSearchTerm('');
 
         } catch (error) {
             setFlash({
@@ -134,66 +185,6 @@ const AddChurch = () => {
             setIsLoading(false);
         }
     };
-
-    // Fetch Groups
-    const fetchGroups = async () => {
-        if (!searchTerm) return;
-
-        setIsLoading(true);
-
-        try {
-            const params = { search: searchTerm };
-            const response = await groupService.getGroups(params);
-
-            let groupData = [];
-            if (Array.isArray(response)) {
-                groupData = response;
-            } else if (response.groups && Array.isArray(response.groups)) {
-                groupData = response.groups;
-            } else if (response.data && Array.isArray(response.data)) {
-                groupData = response.data;
-            }
-
-            setGroups(groupData);
-
-            if (groupData.length > 0) {
-                setShowResults(true);
-            }
-        } catch (error) {
-            setFlash({
-                message: error.response?.data?.message || 'Error fetching groups',
-                type: 'danger'
-            });
-            setGroups([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Effects
-    useEffect(() => {
-        // const delayDebounceFn = setTimeout(() => {
-        //     if (searchTerm && user?.status === 'manager') {
-        //         fetchGroups();
-        //     }
-        // }, 0);
-        if (searchTerm && user?.status === 'manager') {
-            fetchGroups();
-        }
-
-        // return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (resultsRef.current && !resultsRef.current.contains(e.target)) {
-                setShowResults(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     return (
         <main className="app-main">
@@ -227,176 +218,23 @@ const AddChurch = () => {
                                 <form onSubmit={handleSubmit}>
                                     <div className="card-body">
                                         <div className="row g-3">
-
-                                            {/* Group Search - Only for Managers */}
                                             {user?.status === 'manager' && (
                                                 <div className="col-12">
                                                     <label className="form-label fw-bold">
                                                         Select Group <span className="text-danger">*</span>
                                                     </label>
-
-                                                    {/* Search Input */}
-                                                    <div ref={resultsRef} style={{ position: 'relative' }}>
-                                                        <div style={{ position: 'relative' }}>
-                                                            <Search
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    left: '12px',
-                                                                    top: '50%',
-                                                                    transform: 'translateY(-50%)',
-                                                                    color: '#6c757d',
-                                                                    width: '20px',
-                                                                    height: '20px'
-                                                                }}
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                value={searchTerm}
-                                                                onChange={handleSearchChange}
-                                                                onFocus={() => { if (searchTerm) setShowResults(true); }}
-                                                                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-                                                                placeholder="Search groups by name..."
-                                                                className="form-control form-control-lg"
-                                                                style={{ paddingLeft: '45px' }}
-                                                                autoComplete="off"
-                                                            />
-                                                        </div>
-
-                                                        {/* Search Results Dropdown */}
-                                                        {showResults && (
-                                                            <div
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: '100%',
-                                                                    left: 0,
-                                                                    right: 0,
-                                                                    backgroundColor: 'white',
-                                                                    border: '1px solid #dee2e6',
-                                                                    borderRadius: '8px',
-                                                                    marginTop: '0.5rem',
-                                                                    maxHeight: '300px',
-                                                                    overflowY: 'auto',
-                                                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                                                    zIndex: 1000
-                                                                }}
-                                                            >
-                                                                {groups.length === 0 ? (
-                                                                    <div style={{ padding: '1rem', textAlign: 'center', color: '#6c757d' }}>
-                                                                        {isLoading ? 'Searching...' : 'No group(s) found.'}
-                                                                    </div>
-                                                                ) : (
-                                                                    groups.map(group => (
-                                                                        <div
-                                                                            key={group._id}
-                                                                            onClick={() => handleGroupSelect(group)}
-                                                                            style={{
-                                                                                padding: '0.75rem 1rem',
-                                                                                cursor: 'pointer',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                gap: '0.75rem',
-                                                                                borderBottom: '1px solid #f1f3f5',
-                                                                                transition: 'background-color 0.2s'
-                                                                            }}
-                                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                                                                        >
-                                                                            <div style={{
-                                                                                width: '40px',
-                                                                                height: '40px',
-                                                                                borderRadius: '50%',
-                                                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                justifyContent: 'center',
-                                                                                color: 'white',
-                                                                                fontWeight: 'bold',
-                                                                                fontSize: '0.875rem'
-                                                                            }}>
-                                                                                {getInitials(group)}
-                                                                            </div>
-                                                                            <div>
-                                                                                <div style={{ fontWeight: '600', color: '#212529' }}>
-                                                                                    {highlightText(group.name)}
-                                                                                </div>
-                                                                                <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                                                                                    {group.location}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Selected Group Display */}
-                                                    {selectedGroup && (
-                                                        <div
-                                                            style={{
-                                                                marginTop: '1rem',
-                                                                padding: '1rem',
-                                                                backgroundColor: '#f8f9fa',
-                                                                borderRadius: '8px',
-                                                                border: '2px solid #0dcaf0',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '1rem',
-                                                                position: 'relative'
-                                                            }}
-                                                        >
-                                                            <button
-                                                                type="button"
-                                                                onClick={handleRemoveGroup}
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: '0.5rem',
-                                                                    right: '0.5rem',
-                                                                    background: '#dc3545',
-                                                                    border: 'none',
-                                                                    borderRadius: '50%',
-                                                                    width: '28px',
-                                                                    height: '28px',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    cursor: 'pointer',
-                                                                    color: 'white',
-                                                                    transition: 'background-color 0.2s'
-                                                                }}
-                                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bb2d3b'}
-                                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}
-                                                            >
-                                                                <X style={{ width: '16px', height: '16px' }} />
-                                                            </button>
-                                                            <div style={{
-                                                                width: '50px',
-                                                                height: '50px',
-                                                                borderRadius: '50%',
-                                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                color: 'white',
-                                                                fontWeight: 'bold',
-                                                                fontSize: '1rem'
-                                                            }}>
-                                                                {getInitials(selectedGroup)}
-                                                            </div>
-                                                            <div>
-                                                                <div style={{ fontWeight: 'bold', color: '#212529', fontSize: '1.1rem' }}>
-                                                                    {selectedGroup.name}
-                                                                </div>
-                                                                <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                                                                    Selected Group
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                    <SearchSelect
+                                                        options={groupOptions}
+                                                        value={formData.groupId}
+                                                        onChange={handleGroupChange}
+                                                        placeholder="Search and select a group"
+                                                        icon={Users}
+                                                        label="Group"
+                                                        isLoading={isLoading}
+                                                    />
                                                 </div>
                                             )}
 
-                                            {/* Church Name */}
                                             <div className="col-12">
                                                 <label htmlFor="name" className="form-label fw-bold">
                                                     Church Name <span className="text-danger">*</span>
@@ -409,12 +247,10 @@ const AddChurch = () => {
                                                     placeholder="Enter church name"
                                                     value={formData.name}
                                                     onChange={handleInputChange}
-                                                    autoComplete="off"
                                                     required
                                                 />
                                             </div>
 
-                                            {/* Location */}
                                             <div className="col-12">
                                                 <label htmlFor="location" className="form-label fw-bold">
                                                     Location <span className="text-danger">*</span>
@@ -427,12 +263,10 @@ const AddChurch = () => {
                                                     placeholder="e.g. Accra, Ghana"
                                                     value={formData.location}
                                                     onChange={handleInputChange}
-                                                    autoComplete="off"
                                                     required
                                                 />
                                             </div>
 
-                                            {/* Church Pastor */}
                                             <div className="col-12">
                                                 <label htmlFor="pastor" className="form-label fw-bold">
                                                     Church Pastor <span className="text-danger">*</span>
@@ -445,12 +279,10 @@ const AddChurch = () => {
                                                     placeholder="e.g. Rev. John Doe"
                                                     value={formData.pastor}
                                                     onChange={handleInputChange}
-                                                    autoComplete="off"
                                                     required
                                                 />
                                             </div>
 
-                                            {/* Phone Number & Email */}
                                             <div className="col-md-6">
                                                 <label htmlFor="phoneNumber" className="form-label fw-bold">
                                                     Phone Number <span className="text-danger">*</span>
@@ -463,7 +295,6 @@ const AddChurch = () => {
                                                     placeholder="e.g. 0244123456"
                                                     value={formData.phoneNumber}
                                                     onChange={handleInputChange}
-                                                    autoComplete="off"
                                                     required
                                                 />
                                             </div>
@@ -480,10 +311,8 @@ const AddChurch = () => {
                                                     placeholder="e.g. church@example.com"
                                                     value={formData.email}
                                                     onChange={handleInputChange}
-                                                    autoComplete="off"
                                                 />
                                             </div>
-
                                         </div>
                                     </div>
 

@@ -1,8 +1,105 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
+import { Search, X, Building2, CheckCircle2, ChevronDown } from 'lucide-react';
 import FlashMessage from './FlashMessage';
 
-// Added 'user' and 'churches' to props
+/* =========================
+   SearchSelect Component 
+========================= */
+function SearchSelect({ options, value, onChange, placeholder, disabled, icon: Icon, label, isLoading }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const wrapperRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                setIsOpen(false);
+                setSearchTerm('');
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    const handleSelect = (optionValue) => {
+        onChange({ target: { name: 'churchId', value: optionValue } }); // Mimic standard event for parent onChange
+        setIsOpen(false);
+        setSearchTerm('');
+    };
+
+    return (
+        <div className={`search-select-wrapper ${disabled ? 'disabled' : ''}`} ref={wrapperRef}>
+            <div
+                className={`search-select-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+            >
+                <div className="trigger-content">
+                    {Icon && <Icon size={16} strokeWidth={1.5} />}
+                    <span className={value ? 'selected-text' : 'placeholder-text'}>
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
+                </div>
+                <div className="trigger-icons">
+                    {value && !disabled && (
+                        <button
+                            type="button"
+                            className="clear-btn"
+                            onClick={(e) => { e.stopPropagation(); handleSelect(''); }}
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
+                    <ChevronDown size={16} className={`chevron ${isOpen ? 'rotated' : ''}`} />
+                </div>
+            </div>
+
+            {isOpen && (
+                <div className="search-select-dropdown">
+                    <div className="search-box">
+                        <Search size={16} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={`Search ${label.toLowerCase()}...`}
+                            className="search-input-field"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="options-list">
+                        {isLoading ? (
+                            <div className="no-results">Loading...</div>
+                        ) : filteredOptions.length > 0 ? (
+                            filteredOptions.map(option => (
+                                <div
+                                    key={option.value}
+                                    className={`option-item ${option.value === value ? 'selected' : ''}`}
+                                    onClick={() => handleSelect(option.value)}
+                                >
+                                    {option.label}
+                                    {option.value === value && <CheckCircle2 size={16} />}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="no-results">No results found for "{searchTerm}"</div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* =========================
+   Main Component
+========================= */
 const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churches }) => {
 
     const [flash, setFlash] = useState({ message: '', type: '' });
@@ -12,16 +109,22 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [stream, setStream] = useState(null);
-    
+
     const [imageSrc, setImageSrc] = useState(null);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
     const [isCropping, setIsCropping] = useState(false);
 
-    // Check if user has permission to see the church select dropdown
+    // Permission check
     const allowedRoles = ['manager', 'grouppastor', 'groupadmin'];
     const showChurchSelect = user && user.status && allowedRoles.includes(user.status.toLowerCase());
+
+    // Map churches for the SearchSelect
+    const churchOptions = (churches || []).map(church => ({
+        value: church._id,
+        label: church.churchname || church.name
+    }));
 
     const continueStep = (e) => {
         e.preventDefault();
@@ -102,6 +205,7 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
             setIsCropping(false);
             setImageSrc(null);
         } catch (e) {
+            console.error(e);
         }
     };
 
@@ -207,20 +311,15 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
                     {showChurchSelect && (
                         <div className="col-12 mb-3">
                             <label className="form-label">Select Church <span style={{color: 'red'}}>*</span></label>
-                            <select 
-                                name="churchId" 
-                                className="form-select" 
-                                onChange={onChange} 
-                                value={data.churchId || ''} 
-                                required
-                            >
-                                <option value="">Select Church</option>
-                                {churches && churches.map((church) => (
-                                    <option key={church._id} value={church._id}>
-                                        {church.churchname || church.name} 
-                                    </option>
-                                ))}
-                            </select>
+                            <SearchSelect 
+                                options={churchOptions}
+                                value={data.churchId || ''}
+                                onChange={onChange}
+                                placeholder="Search and select church"
+                                icon={Building2}
+                                label="Church"
+                                isLoading={false}
+                            />
                         </div>
                     )}
 
@@ -293,9 +392,9 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
 
 export default PersonalInfoForm;
 
-
-
-
+/* =========================
+   Image Helpers
+========================= */
 const createImage = (url) =>
     new Promise((resolve, reject) => {
         const image = new Image();
@@ -310,9 +409,7 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
 
-    // Cap output size
     const MAX_SIZE = 600;
-    
     let width = pixelCrop.width;
     let height = pixelCrop.height;
 
@@ -329,16 +426,13 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     canvas.width = width;
     canvas.height = height;
 
-    // Fill Background with White
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingQuality = 'medium';
 
-    // Draw Image Logic
     const scaleX = width / pixelCrop.width;
     const scaleY = height / pixelCrop.height;
 
-    // Calculate position on canvas
     const dx = -pixelCrop.x * scaleX;
     const dy = -pixelCrop.y * scaleY;
     const dw = image.width * scaleX;
@@ -346,10 +440,8 @@ async function getCroppedImg(imageSrc, pixelCrop) {
 
     ctx.drawImage(image, dx, dy, dw, dh);
 
-    // Compress
     const base64 = canvas.toDataURL('image/jpeg', 0.7);
     
-    // Cleanup
     canvas.width = 0;
     canvas.height = 0;
 
