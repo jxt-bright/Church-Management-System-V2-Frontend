@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styles from '../assets/styles/MonthlyAttendanceReport.module.css'; 
+import styles from '../assets/styles/MonthlyAttendanceReport.module.css';
 import { useAuth } from '../context/AuthContext';
 import { RequireAccess } from '../components/RequireAccess.jsx';
 import FlashMessage from '../components/FlashMessage';
@@ -84,14 +84,15 @@ const GeneralReport = () => {
     const [groups, setGroups] = useState([]);
     const [churches, setChurches] = useState([]);
 
-    const [reportData, setReportData] = useState({ 
-        monday: null, thursday: null, sunday: null, gck: null, homeCaringFellowship: null, seminar: [] 
+    const [reportData, setReportData] = useState({
+        meta: { groupName: '', churchName: '' }, 
+        monday: null, thursday: null, sunday: null, gck: null, homeCaringFellowship: null, seminar: []
     });
 
-    const [formData, setFormData] = useState({ 
-        groupId: null, 
-        churchId: null, 
-        startMonth: '', 
+    const [formData, setFormData] = useState({
+        groupId: null,
+        churchId: null,
+        startMonth: '',
         endMonth: new Date().toISOString().slice(0, 7)
     });
 
@@ -113,20 +114,25 @@ const GeneralReport = () => {
     }, [user, userStatus]);
 
     const formatMonthDisplay = (val) => val ? new Date(val + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : '-';
-    const getSelectedGroupName = () => formData.groupId ? (groups.find(g => g._id === formData.groupId)?.name || "N/A") : (user?.groupName || "");
+    
+    const getSelectedGroupName = () => {
+        return reportData.meta?.groupName || user?.groupName || "N/A";
+    };
+    
     const getSelectedChurchName = () => {
         if (formData.churchId === 'group') return 'Entire Group';
-        const activeId = (userStatus === 'churchpastor' || userStatus === 'churchadmin') ? user?.churchId : formData.churchId;
-        const found = churches.find(c => c._id === activeId);
-        return found?.churchname || found?.name || user?.churchName || "";
+        return reportData.meta?.churchName || user?.churchName || "";
     };
 
     const handleParamChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
     const handleLoadReport = async (e) => {
         e.preventDefault();
-        const isLocalUser = userStatus === 'churchpastor' || userStatus === 'churchadmin';
-        if (!isLocalUser && !formData.groupId && !formData.churchId) {
+
+        const isChurchLevel = userStatus === 'churchpastor' || userStatus === 'churchadmin';
+        const isGroupLevel = userStatus === 'groupadmin' || userStatus === 'grouppastor';
+
+        if (!isChurchLevel && !formData.groupId && !formData.churchId) {
             setFlash({ message: 'Please select either a Group or a Church.', type: 'danger' });
             return;
         }
@@ -138,10 +144,30 @@ const GeneralReport = () => {
 
         setIsFetchingReport(true);
         try {
+            let finalGroupId = formData.groupId;
+            let finalChurchId = formData.churchId;
+
+            if (isChurchLevel) {
+                finalChurchId = user?.churchId;
+                finalGroupId = null;
+            } else if (isGroupLevel) {
+                if (formData.churchId === 'group') {
+                    finalGroupId = user?.groupId;
+                    finalChurchId = null;
+                } else {
+                    finalChurchId = formData.churchId;
+                    finalGroupId = null;
+                }
+            } else if (userStatus === 'manager' && formData.churchId === 'group') {
+                finalGroupId = formData.groupId;
+                finalChurchId = null;
+            }
+
             const rawPayload = {
-                ...formData,
-                groupId: formData.churchId === 'group' ? (userStatus.includes('group') ? user?.groupId : formData.groupId) : formData.groupId,
-                churchId: isLocalUser ? user?.churchId : (formData.churchId === 'group' ? null : formData.churchId),
+                startMonth: formData.startMonth,
+                endMonth: formData.endMonth,
+                groupId: finalGroupId,
+                churchId: finalChurchId,
             };
 
             const cleanPayload = Object.fromEntries(
@@ -152,10 +178,10 @@ const GeneralReport = () => {
             setReportData(data);
             setShowModal(false);
             setFlash({ message: 'General report loaded successfully.', type: 'success' });
-        } catch (err) { 
-            setFlash({ message: err.response?.data?.message || "Failed to load general report.", type: 'danger' }); 
-        } finally { 
-            setIsFetchingReport(false); 
+        } catch (err) {
+            setFlash({ message: err.response?.data?.message || "Failed to load general report.", type: 'danger' });
+        } finally {
+            setIsFetchingReport(false);
         }
     };
 
@@ -163,7 +189,7 @@ const GeneralReport = () => {
         setIsFetchingReport(true);
         const rangeText = `${formatMonthDisplay(formData.startMonth)} - ${formatMonthDisplay(formData.endMonth)}`;
         try {
-            const doc = <GeneralReportPDF data={reportData} month={rangeText} churchName={getSelectedChurchName()} groupName={getSelectedGroupName()} logo={logo} />;
+            const doc = <GeneralReportPDF data={reportData} month={rangeText} logo={logo} />;
             const blob = await pdf(doc).toBlob();
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -176,7 +202,7 @@ const GeneralReport = () => {
 
     const VerticalServiceTable = ({ title, icon, data, colorClass }) => {
         const d = data || { am: 0, af: 0, at: 0, ym: 0, yf: 0, yt: 0, cm: 0, cf: 0, ct: 0, nm: 0, nf: 0, nt: 0, o1: "0.00", o2: "0.00", ot: "0.00" };
-        
+
         return (
             <div className={`${styles['service-card']} shadow-sm mb-4`}>
                 <div className={`${styles['service-title']} ${colorClass}`}>{icon} {title}</div>
@@ -236,7 +262,7 @@ const GeneralReport = () => {
                                             <td>{new Date(r.date).toISOString().split('T')[0]}</td>
                                             <td>{r.adults}</td><td>{r.youths}</td><td>{r.children}</td><td>{r.total}</td>
                                         </tr>
-                                    )) : <tr><td colSpan="5" style={{textAlign:'center', fontStyle:'italic'}}>No records found</td></tr>}
+                                    )) : <tr><td colSpan="5" style={{ textAlign: 'center', fontStyle: 'italic' }}>No records found</td></tr>}
                                     <tr className="attendance-total-row">
                                         <td>Total</td><td>{totals.a}</td><td>{totals.y}</td><td>{totals.c}</td><td>{totals.t}</td>
                                     </tr>
@@ -267,7 +293,7 @@ const GeneralReport = () => {
                     .general-report-table th, .general-report-table td { padding: 6px 2px !important; }
                 }
             `}</style>
-            
+
             <FlashMessage message={flash.message} type={flash.type} onClose={() => setFlash({ message: '', type: '' })} />
             <div className={styles['app-container']}>
                 <div className={styles.container}>
@@ -284,7 +310,7 @@ const GeneralReport = () => {
                         </div>
                         <button className={styles['change-btn']} onClick={() => setShowModal(true)}>Change Parameters</button>
                     </div>
-                    
+
                     <div className={styles.content}>
                         <VerticalServiceTable title="Sunday Worship Service" icon="⛪" data={reportData?.sunday} colorClass={styles.sunday} />
                         <VerticalServiceTable title="Monday Bible Studies" icon="📖" data={reportData?.monday} colorClass={styles.monday} />
@@ -308,7 +334,7 @@ const GeneralReport = () => {
                         <form onSubmit={handleLoadReport} className={styles['modal-form']}>
                             <RequireAccess minStatus="manager"><SearchSelect label="Select Group" options={groups.map(g => ({ value: g._id, label: g.name }))} value={formData.groupId} onChange={(v) => handleParamChange('groupId', v)} placeholder="Search Group..." isLoading={isLoadingInitial} disabled={formData.churchId !== null && formData.churchId !== 'group'} /></RequireAccess>
                             <RequireAccess minStatus="groupAdmin"><SearchSelect label="Select Church" options={[...(userStatus.includes('group') ? [{ value: 'group', label: 'Whole Group' }] : []), ...churches.map(c => ({ value: c._id, label: c.name || c.churchname }))]} value={formData.churchId} onChange={(v) => handleParamChange('churchId', v)} placeholder="Search Church..." isLoading={isLoadingInitial} disabled={formData.groupId !== null} /></RequireAccess>
-                            
+
                             <div className="form-group-row-responsive">
                                 <div className={styles['form-group']} style={{ flex: 1 }}>
                                     <label className={styles['form-label']}>Start Month</label>

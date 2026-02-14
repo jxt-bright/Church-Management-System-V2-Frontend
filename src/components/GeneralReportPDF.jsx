@@ -173,11 +173,15 @@ const SpecialServiceTable = ({ title, data, shouldAverage }) => {
     );
 };
 
-const GeneralReportPDF = ({ data, month, churchName, groupName, logo }) => {
-    const isGroupReport = churchName === 'Entire Group';
+const GeneralReportPDF = ({ data, month, logo }) => {
+    // Extract names directly from the backend meta object
+    const { groupName, churchName } = data.meta || {};
+    
+    // Check if it's a group report (no specific church)
+    const isGroupReport = !churchName || churchName === 'Entire Group';
 
     return (
-        <Document title={`General_Report_${churchName}_${month}`}>
+        <Document title={`General_Report_${churchName || groupName}_${month}`}>
             <Page size="A4" style={styles.page}>
                 <Image src={logo} style={styles.watermark} fixed />
                 <View style={styles.header}>

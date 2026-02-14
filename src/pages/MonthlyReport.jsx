@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../assets/styles/MonthlyAttendanceReport.module.css';
 import { useAuth } from '../context/AuthContext';
@@ -102,6 +101,7 @@ const MonthlyAttendanceReport = () => {
     const [groups, setGroups] = useState([]);
     const [churches, setChurches] = useState([]);
     const [reportData, setReportData] = useState({ 
+        meta: { groupName: '', churchName: '' },
         monday: [], thursday: [], sunday: [],
         gck: [], homeCaringFellowship: [], seminar: [] 
     });
@@ -138,21 +138,12 @@ const MonthlyAttendanceReport = () => {
     const formatMonthDisplay = (val) => new Date(val + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
     
     const getSelectedGroupName = () => {
-        if (formData.groupId) {
-            return groups.find(g => g._id === formData.groupId)?.name || "N/A";
-        }
-        if (formData.churchId && formData.churchId !== 'group') {
-            const selectedChurch = churches.find(c => c._id === formData.churchId);
-            if (selectedChurch?.groupName) return selectedChurch.groupName;
-        }
-        return user?.groupName || "";
+        return reportData.meta?.groupName || user?.groupName || "N/A";
     };
     
     const getSelectedChurchName = () => {
         if (formData.churchId === 'group') return 'Entire Group';
-        const activeId = (userStatus === 'churchpastor' || userStatus === 'churchadmin') ? user?.churchId : formData.churchId;
-        const found = churches.find(c => c._id === activeId);
-        return found?.churchname || found?.name || user?.churchName || "";
+        return reportData.meta?.churchName || user?.churchName || "";
     };
 
     const handleParamChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
@@ -160,6 +151,7 @@ const MonthlyAttendanceReport = () => {
     const handleLoadReport = async (e) => {
         e.preventDefault();
         const isLocalUser = userStatus === 'churchpastor' || userStatus === 'churchadmin';
+        const isGroupUser = userStatus === 'groupadmin' || userStatus === 'grouppastor';
 
         if (!isLocalUser && !formData.groupId && !formData.churchId) {
             setFlash({ message: 'Please select either a Group or a Church.', type: 'danger' });
@@ -167,21 +159,32 @@ const MonthlyAttendanceReport = () => {
         }
 
         setIsFetchingReport(true);
-        const isWholeGroup = formData.churchId === 'group';
+
+        let finalGroupId = formData.groupId;
+        let finalChurchId = formData.churchId;
+
+        if (isLocalUser) {
+            finalChurchId = user?.churchId;
+            finalGroupId = null;
+        } else if (isGroupUser && formData.churchId === 'group') {
+            finalGroupId = user?.groupId;
+            finalChurchId = null;
+        }
 
         const rawPayload = {
-            ...formData,
-            groupId: isWholeGroup ? (userStatus.includes('group') ? user?.groupId : formData.groupId) : formData.groupId,
-            churchId: isLocalUser ? user?.churchId : (isWholeGroup ? null : formData.churchId),
+            month: formData.month,
+            groupId: finalGroupId,
+            churchId: finalChurchId === 'group' ? null : finalChurchId,
         };
 
         const cleanPayload = Object.fromEntries(
-            Object.entries(rawPayload).filter(([_, value]) => value !== null && value !== undefined && value !== '')
+            Object.entries(rawPayload).filter(([_, value]) => value !== null && value !== '')
         );
 
         try {
             const data = await reportService.monthlyReport(cleanPayload);
             setReportData({
+                meta: data?.meta || { groupName: '', churchName: '' },
                 monday: data?.monday || [],
                 thursday: data?.thursday || [],
                 sunday: data?.sunday || [],
@@ -205,8 +208,6 @@ const MonthlyAttendanceReport = () => {
                 <MonthlyReportPDF
                     data={reportData}
                     month={formatMonthDisplay(formData.month)}
-                    churchName={getSelectedChurchName()}
-                    groupName={getSelectedGroupName()}
                     logo={logo}
                 />
             );
@@ -228,7 +229,6 @@ const MonthlyAttendanceReport = () => {
     const isGroupDisabled = formData.churchId !== null && formData.churchId !== 'group';
     const isChurchDisabled = formData.groupId !== null;
 
-    // Changes: Calculated ONLY using Monday, Thursday, and Sunday (Excluding special services)
     const totalWeeklyAttendance =
         [...reportData.monday, ...reportData.thursday, ...reportData.sunday]
         .reduce((s, r) => s + (r?.reason || !r?.totalAttendance ? 0 : r.totalAttendance), 0);
@@ -382,13 +382,11 @@ const MonthlyAttendanceReport = () => {
 
                     <div className={styles['report-info']}>
                         <div className={styles['report-info-group']}>
-                            {/* Always show Group */}
                             <div className={styles['report-info-item']}>
                                 <span className={styles['report-info-label']}>Group:</span>
                                 <span className={styles['report-info-value']}>{getSelectedGroupName()}</span>
                             </div>
                             
-                            {/* ONLY show Church if it is NOT a group selection */}
                             {formData.churchId !== 'group' && (
                                 <div className={styles['report-info-item']}>
                                     <span className={styles['report-info-label']}>Church:</span>

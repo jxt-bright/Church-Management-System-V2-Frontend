@@ -201,12 +201,15 @@ const SpecialTable = ({ title, rows }) => {
     );
 };
 
-const MonthlyReportPDF = ({ data, month, churchName, groupName, logo }) => {
+const MonthlyReportPDF = ({ data, month, logo }) => {
+    // Access names directly from the data.meta returned by backend
+    const { groupName, churchName } = data.meta || {};
+    
     // Determine if it is a group report to hide Church details
-    const isGroupReport = churchName === 'Entire Group';
+    const isGroupReport = !churchName || churchName === 'Entire Group';
 
     return (
-        <Document title={`Report_${churchName}_${month}`}>
+        <Document title={`Report_${churchName || groupName}_${month}`}>
             <Page size="A4" style={styles.page}>
                 <Image src={logo} style={styles.watermark} fixed />
                 <View style={styles.header}>
@@ -216,7 +219,6 @@ const MonthlyReportPDF = ({ data, month, churchName, groupName, logo }) => {
                         <Text>MONTH: {month.toUpperCase()}</Text>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            {/* Changes: Only show Church and separator if it is NOT a group report */}
                             {!isGroupReport && (
                                 <>
                                     <Text>Church: {churchName}</Text>
