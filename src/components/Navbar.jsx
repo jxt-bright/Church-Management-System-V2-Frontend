@@ -63,7 +63,7 @@ const Navbar = ({ onToggle }) => {
       registration: ['/addgroup', '/addchurch', '/adduser', '/addmember'].includes(path),
       views: ['/groups', '/churches', '/members', '/users'].includes(path),
       specialService: ['/attendance', '/addspecialservice', '/specialservices'].includes(path),
-      reports: ['/monthlyreport', '/attendance/report'].includes(path),
+      reports: ['/monthlyreport', '/generalreport'].includes(path),
     });
 
     const handleResize = () => {
@@ -304,7 +304,7 @@ const Navbar = ({ onToggle }) => {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link to="/home" className={`nav-link d-flex align-items-center ${isActive('/attendance/report')}`} onClick={handleMobileLinkClick}>
+                      <Link to="/generalreport" className={`nav-link d-flex align-items-center ${isActive('/generalreport')}`} onClick={handleMobileLinkClick}>
                         <i className="nav-icon bi bi-circle me-2"></i>
                         <p className="mb-0">General Report</p>
                       </Link>

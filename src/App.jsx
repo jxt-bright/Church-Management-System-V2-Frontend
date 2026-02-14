@@ -27,6 +27,8 @@ import AddSpecialService from './pages/AddSpecialService.jsx';
 import SpecialServices from './pages/SpecialServices.jsx';
 import SendMessage from './pages/SendMessage.jsx';
 import MonthlyReport from './pages/MonthlyReport.jsx';
+import GeneralReport from './pages/GeneralReport.jsx';
+
 
 
 
@@ -143,6 +145,12 @@ const App = () => {
             <Route path="/monthlyreport" element={
                 <ProtectedRoute minStatus="churchAdmin">
                     <Layout> <MonthlyReport /> </Layout>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/generalreport" element={
+                <ProtectedRoute minStatus="churchAdmin">
+                    <Layout> <GeneralReport /> </Layout>
                 </ProtectedRoute>
             } />
 

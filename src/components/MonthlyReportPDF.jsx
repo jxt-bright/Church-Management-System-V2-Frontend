@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
         top: '25%', 
         left: '15%', 
         width: '70%', 
-        opacity: 0.15, 
+        opacity: 0.1, 
         zIndex: -1
     },
     header: {

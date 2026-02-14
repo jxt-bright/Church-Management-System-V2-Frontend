@@ -11,7 +11,7 @@ import FlashMessage from '../components/FlashMessage';
 import { useAuth } from '../context/AuthContext';
 import '../assets/styles/GroupsModern.css';
 import '../assets/styles/Attendance.css'; 
-import '../assets/styles/SendMessage.css'; // Importing the styles for SearchSelect
+import '../assets/styles/SendMessage.css';
 
 /* =========================
    SearchSelect Component 
@@ -152,7 +152,6 @@ const SpecialServiceList = () => {
   const isLocalLeader = ['churchpastor', 'churchadmin'].includes(userStatus);
   const isGroupLeader = ['grouppastor', 'groupadmin'].includes(userStatus);
 
-  // Initial Fetch of Churches for SearchSelect (as in Add Form)
   useEffect(() => {
     const fetchChurches = async () => {
       if (canSearch) {
@@ -186,7 +185,6 @@ const SpecialServiceList = () => {
     setCurrentPage(1);
   };
 
-  // --- API Fetch Logic ---
   useEffect(() => {
     fetchAttendance();
   }, [currentPage, filterDate, activeTab, selectedChurch, user]);
@@ -222,7 +220,6 @@ const SpecialServiceList = () => {
     }
   };
 
-  // --- Actions Handlers ---
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -282,7 +279,6 @@ const SpecialServiceList = () => {
       <div className="content-container" style={{ marginTop: '-2rem' }}>
         <div className="data-card" style={{ marginBottom: '1.5rem', padding: '0', overflow: 'visible' }}>
           <div style={{ padding: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            
             {canSearch && (
               <div style={{ flex: '2 1 0%', minWidth: '300px' }}>
                 <SearchSelect 
@@ -382,46 +378,55 @@ const SpecialServiceList = () => {
           <div className="pagination-container">
             <div className="pagination-info">Showing {services.length} of {totalRecords} records</div>
             <div className="pagination-controls">
-              <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</button>
-              <span className="pagination-btn" style={{ cursor: 'default', backgroundColor: 'transparent' }}>Page {currentPage} of {totalPages || 1}</span>
-              <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages}>Next</button>
+              <button className="pagination-btn" style={{ borderRadius: '50px' }} onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</button>
+              <span className="pagination-btn" style={{ cursor: 'default', backgroundColor: 'transparent', border: 'none' }}>Page {currentPage} of {totalPages || 1}</span>
+              <button className="pagination-btn" style={{ borderRadius: '50px' }} onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage >= totalPages}>Next</button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Edit Modal (Keeping your existing modal structure) */}
+      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-fadeIn" onClick={() => setShowEditModal(false)}>
           <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn" onClick={(e) => e.stopPropagation()}>
             <div className="bg-indigo-600 p-8 text-center text-white relative">
-              <button onClick={() => setShowEditModal(false)} className="absolute right-6 top-6 p-2 hover:bg-white/20 rounded-full"><X size={24} /></button>
+              <button onClick={() => setShowEditModal(false)} className="absolute right-6 top-6 p-2 hover:bg-white/20 rounded-full transition-colors"><X size={24} /></button>
               <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-2xl mb-4"><Edit size={28} /></div>
-              <h2 className="text-2xl font-bold">Edit Record</h2>
+              <h2 className="text-2xl font-bold">Edit Special Record</h2>
             </div>
             <form onSubmit={handleEditSubmit} className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Category</label>
-                  <select name="category" value={editFormData.category} onChange={(e) => setEditFormData({...editFormData, category: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none bg-slate-50">
+                  <select name="category" value={editFormData.category} onChange={(e) => setEditFormData({...editFormData, category: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none bg-slate-50 focus:border-indigo-500 transition-all">
                     {tabs.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Date</label>
-                  <input type="date" name="date" value={editFormData.date} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none bg-slate-50" />
+                  <input type="date" name="date" value={editFormData.date} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none bg-slate-50 focus:border-indigo-500 transition-all" />
                 </div>
               </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center">
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Adults</label>
-                  <input type="number" value={editFormData.adults} onChange={(e) => setEditFormData({...editFormData, adults: parseInt(e.target.value)})} className="w-full p-3 text-center font-bold rounded-xl border" />
+                  <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Adults</label>
+                  <input type="number" min="0" value={editFormData.adults} onChange={(e) => setEditFormData({...editFormData, adults: parseInt(e.target.value) || 0})} className="w-full p-3 text-center font-bold rounded-xl border border-slate-200 focus:border-indigo-500 outline-none" />
                 </div>
-                {/* ... Add Youths and Children similarly ... */}
+                <div className="text-center">
+                  <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Youths</label>
+                  <input type="number" min="0" value={editFormData.youths} onChange={(e) => setEditFormData({...editFormData, youths: parseInt(e.target.value) || 0})} className="w-full p-3 text-center font-bold rounded-xl border border-slate-200 focus:border-indigo-500 outline-none" />
+                </div>
+                <div className="text-center">
+                  <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Kids</label>
+                  <input type="number" min="0" value={editFormData.children} onChange={(e) => setEditFormData({...editFormData, children: parseInt(e.target.value) || 0})} className="w-full p-3 text-center font-bold rounded-xl border border-slate-200 focus:border-indigo-500 outline-none" />
+                </div>
               </div>
+
               <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 py-4 font-bold rounded-[50px] bg-slate-100 text-slate-600">Cancel</button>
-                <button type="submit" className="flex-1 py-4 text-white font-bold rounded-[50px] bg-indigo-600 shadow-lg">Save Changes</button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 py-4 font-bold rounded-[50px] bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Cancel</button>
+                <button type="submit" className="flex-1 py-4 text-white font-bold rounded-[50px] bg-indigo-600 shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-0.5">Save Changes</button>
               </div>
             </form>
           </div>
@@ -434,6 +439,8 @@ const SpecialServiceList = () => {
         .animate-fadeIn { animation: fadeIn 0.2s ease-out forwards; }
         .animate-scaleIn { animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .date-filter-wrapper:focus-within { border-color: #4f46e5 !important; }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination-btn:not(:disabled):hover { background-color: #f1f5f9; }
       `}</style>
     </div>
   );
