@@ -3,7 +3,7 @@ import { Search, UserCog, Link, UserCheck, X, Loader2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../assets/styles/AddUser.css';
 import memberService from '../services/memberService';
-import userService from '../services/userService';
+import userService from '../services/userService.js';
 import FlashMessage from '../components/FlashMessage';
 import { useAuth } from '../context/AuthContext';
 
