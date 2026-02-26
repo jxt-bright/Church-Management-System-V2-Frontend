@@ -18,12 +18,12 @@ const authService = {
   },
 
   requestPasswordReset: async (credentials) => {
-    const res = await api.post('auth/reqResetPassword', credentials)
+    const res = await api.post('/auth/reqResetPassword', credentials)
     return res.data;
   },
 
   authenticateCode: async (credentials) => {
-    const res = await api.post('auth/authCode', credentials)
+    const res = await api.post('/auth/authCode', credentials)
     return res.data;
   },
 
