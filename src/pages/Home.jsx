@@ -136,7 +136,6 @@ function Dashboard() {
         const result = await dashboardService.getDashboardData(user);
         setData(result.data);
       } catch (err) {
-        console.error("Dashboard Load Error", err);
       } finally {
         setLoading(false);
       }
