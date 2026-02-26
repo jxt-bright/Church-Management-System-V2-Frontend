@@ -39,7 +39,9 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
+        console.log("It came here in Api to call refresh Token, below is its response")
         const res = await api.post("/auth/refreshToken");
+        console.log(res.data.accessToken)
         setAuthToken(res.data.accessToken);
         originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
         return api(originalRequest);
