@@ -7,9 +7,7 @@ const authService = {
   },
 
   refreshToken: async () => {
-    console.log('sent a refresh token request from frontend, below is the response')
     const res = await api.post("/auth/refreshToken");
-    console.log(res.data)
     return res.data;
   },
 
