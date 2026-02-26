@@ -7,9 +7,9 @@ import { ProtectedRoute } from './components/RequireAccess.jsx';
 
 // Import Pages
 import Login from './pages/Login.jsx';
-import ResetPassword from './pages/ForgotPassword';
-import Home from './pages/Home';
-import MemberRegistration from './pages/MemberRegistration';
+import ForgotPassaword from './pages/ForgotPassword.jsx';
+import Home from './pages/Home.jsx';
+import MemberRegistration from './pages/MemberRegistration.jsx';
 import AddGroup from './pages/AddGroup.jsx';
 import AddChurch from './pages/AddChurch.jsx';
 import AddUser from './pages/AddUser.jsx';
@@ -36,7 +36,7 @@ const App = () => {
     return (
         <Routes>
             <Route path="/" element={<Login />} />
-            <Route path="/resetpassword" element={<ResetPassword />} />
+            <Route path="/forgotpassword" element={<ForgotPassaword />} />
 
             {/* Protected Routes */}
 

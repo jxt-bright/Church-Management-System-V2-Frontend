@@ -1,263 +1,340 @@
-import React from 'react';
-import Chart from 'react-apexcharts';
+import { useState, useEffect, useRef } from "react";
+import { RequireStrictAccess, RequireAccess } from '../components/RequireAccess.jsx';
+import { useAuth } from '../context/AuthContext';
+import dashboardService from "../services/dashboardService.js";
+import {
+  AreaChart, Area, BarChart, Bar,
+  PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from "recharts";
 
 
-const Home = () => {
-
-  const membersCount = 450;
-  const workersCount = 65;
-  const usersCount = 120;
-  
-  // Data for Charts
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
-  // Chart 1: Attendance (Adults, Youths, Children)
-  const adultData = [150, 160, 155, 170, 165, 180, 175, 190, 185, 200, 195, 210];
-  const youthData = [80, 85, 82, 90, 88, 95, 92, 100, 98, 105, 102, 110];
-  const childrenData = [40, 45, 42, 50, 48, 55, 52, 60, 58, 65, 62, 70];
-
-  // Chart 2: Financial/Sales Data (From the specific script in your EJS)
-  const netProfitData = [44, 55, 57, 56, 61, 58, 63, 60, 66, 33, 0, 0];
-  const revenueData = [76, 85, 101, 98, 87, 105, 91, 114, 94, 33, 0, 0];
-  const cashFlowData = [35, 41, 36, 26, 45, 48, 52, 53, 41, 33, 0, 0];
-
-  // Chart 3: Demographics Pie Chart
-  const demographicData = [50, 60, 30, 40, 20, 25]; 
-
-  // Chart 4: Offering
-  const firstOfferingData = [1200, 1350, 1250, 1400, 1500, 1600, 1550, 1700, 1650, 1800, 1900, 2000];
-  const secondOfferingData = [800, 900, 850, 950, 1000, 1100, 1050, 1150, 1100, 1200, 1250, 1300];
-
-
-
-
-  // Attendance Over Time (Area Chart)
-  const attendanceChartOptions = {
-    chart: { type: 'area', height: 350, toolbar: { show: false } },
-    colors: ['#0d6efd', '#20c997', '#FFD700'],
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth' },
-    xaxis: { categories: monthLabels },
-    fill: { opacity: 1 },
-    tooltip: { y: { formatter: (val) => val } },
-  };
-  const attendanceChartSeries = [
-    { name: 'ADULTS', data: adultData },
-    { name: 'YOUTHS', data: youthData },
-    { name: 'CHILDREN', data: childrenData },
-  ];
-
-  // Financial Bar Chart (Originally labeled Attendance in EJS, seemingly financial data)
-  const financialChartOptions = {
-    chart: { type: 'bar', height: 200, toolbar: { show: false } },
-    plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
-    colors: ['#0d6efd', '#198754', '#ffc107'],
-    dataLabels: { enabled: false },
-    stroke: { show: true, width: 2, colors: ['transparent'] },
-    xaxis: { categories: monthLabels },
-    fill: { opacity: 1 },
-    tooltip: { y: { formatter: (val) => '$ ' + val + ' thousands' } },
-  };
-  const financialChartSeries = [
-    { name: 'Net Profit', data: netProfitData },
-    { name: 'Revenue', data: revenueData },
-    { name: 'Free Cash Flow', data: cashFlowData },
-  ];
-
-  // Demographics Pie Chart
-  const pieChartOptions = {
-    chart: { type: 'donut' },
-    labels: ['Adult Males', 'Adult Females', 'Youth Males', 'Youth Females', 'Children Males', 'Children Females'],
-    dataLabels: { enabled: false },
-    colors: ['#0d6efd', '#20c997', '#ffc107', '#d63384', '#6f42c1', '#adb5bd'],
-    legend: { position: 'bottom' }
-  };
-  const pieChartSeries = demographicData;
-
-  // Offering Over Time
-  const offeringChartOptions = {
-    chart: { type: 'area', height: 500, toolbar: { show: false } },
-    colors: ['#0d6efd', '#20c997'],
-    dataLabels: { enabled: false },
-    stroke: { curve: 'smooth' },
-    xaxis: { categories: monthLabels },
-    fill: { opacity: 1 },
-    tooltip: { y: { formatter: (val) => 'GHS ' + val } },
-  };
-  const offeringChartSeries = [
-    { name: 'First Offering', data: firstOfferingData },
-    { name: 'Second Offering', data: secondOfferingData },
-  ];
-
-
-  return (
-    <div className="app-wrapper">
-      
-      <main className="app-main">
-        {/* App Content Header */}
-        <div className="app-content-header mb-4">
-          <div className="container-fluid">
-            <div className="row">
-              <div className="col-sm-6">
-                <h3 className="mb-0">Home</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* App Content */}
-        <div className="app-content">
-          <div className="container-fluid">
-            
-            {/* Small Boxes Row */}
-            <div className="row">
-              {/* Total Members */}
-              <div className="col-lg-3 col-6">
-                <div className="small-box text-bg-primary p-3 rounded mb-4 position-relative">
-                  <div className="inner">
-                    <h3>{membersCount}</h3>
-                    <p>Total Members</p>
-                  </div>
-                  <div className="icon position-absolute top-0 end-0 p-3 opacity-25">
-                    <svg fill="currentColor" width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"></path>
-                    </svg>
-                  </div>
-                  <a href="/member/memberstable" className="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover d-block mt-2">
-                    More info <i className="bi bi-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-
-              {/* Number Of Workers */}
-              <div className="col-lg-3 col-6">
-                <div className="small-box text-bg-success p-3 rounded mb-4 position-relative">
-                  <div className="inner">
-                    <h3>{workersCount}<sup className="fs-5"></sup></h3>
-                    <p>Number Of Workers</p>
-                  </div>
-                  <div className="icon position-absolute top-0 end-0 p-3 opacity-25">
-                    <svg fill="currentColor" width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z"></path>
-                    </svg>
-                  </div>
-                  <a href="/member/workerstable" className="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover d-block mt-2">
-                    More info <i className="bi bi-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-
-              {/* Total Users */}
-              <div className="col-lg-3 col-6">
-                <div className="small-box text-bg-warning p-3 rounded mb-4 position-relative">
-                  <div className="inner">
-                    <h3>{usersCount}</h3>
-                    <p>Total Users</p>
-                  </div>
-                  <div className="icon position-absolute top-0 end-0 p-3 opacity-25">
-                    <svg fill="currentColor" width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M6.25 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM3.25 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM19.75 7.5a.75.75 0 00-1.5 0v2.25H16a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25H22a.75.75 0 000-1.5h-2.25V7.5z"></path>
-                    </svg>
-                  </div>
-                  <a href="/user/userstable" className="small-box-footer link-dark link-underline-opacity-0 link-underline-opacity-50-hover d-block mt-2">
-                    More info <i className="bi bi-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-
-              {/* Unique Visitors */}
-              <div className="col-lg-3 col-6">
-                <div className="small-box text-bg-danger p-3 rounded mb-4 position-relative">
-                  <div className="inner">
-                    <h3>65</h3>
-                    <p>Unique Visitors</p>
-                  </div>
-                  <div className="icon position-absolute top-0 end-0 p-3 opacity-25">
-                  </div>
-                  <a href="#" className="small-box-footer link-light link-underline-opacity-0 link-underline-opacity-50-hover d-block mt-2">
-                    More info <i className="bi bi-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Charts Row */}
-            <div className="row">
-              
-              {/* Attendance Chart (Adults/Youth/Child) */}
-              <div className="col-lg-12">
-                <div className="card mb-4">
-                  <div className="card-header" style={{ cursor: 'move' }}>
-                    <h3 className="card-title fw-bold fs-5">Attendance Over Time</h3>
-                  </div>
-                  <div className="card-body">
-                    <Chart options={attendanceChartOptions} series={attendanceChartSeries} type="area" height={350} />
-                    <div className="d-flex flex-row justify-content-end mt-2">
-                      <span className="me-2"><i className="bi bi-square-fill text-primary"></i> ADULTS</span>
-                      <span className="me-2"><i className="bi bi-square-fill text-success"></i> YOUTHS</span>
-                      <span className="me-2"><i className="bi bi-square-fill text-warning"></i> CHILDREN</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial/Bar Chart */}
-              <div className="card col-lg-7 mb-4">
-                <div className="card-header" style={{ cursor: 'move' }}>
-                  <div className="d-flex justify-content-between">
-                    <h3 className="card-title fw-bold fs-5">Financial Overview</h3>
-                  </div>
-                </div>
-                <div className="card-body">
-                  <div className="position-relative mb-4">
-                    <Chart options={financialChartOptions} series={financialChartSeries} type="bar" height={200} />
-                  </div>
-                  <div className="d-flex flex-row justify-content-end">
-                    <span className="me-2"><i className="bi bi-square-fill text-primary"></i> Net Profit</span>
-                    <span className="me-2"><i className="bi bi-square-fill text-success"></i> Revenue</span>
-                    <span><i className="bi bi-square-fill text-warning"></i> Cash Flow</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pie Chart */}
-              <div className="col-lg-5">
-                <div className="card mb-4">
-                  <div className="card-header">
-                    <h3 className="card-title fw-bold fs-5">Church Population Distribution</h3>
-                  </div>
-                  <div className="card-body">
-                    <div className="row">
-                      <div className="col-12">
-                        <Chart options={pieChartOptions} series={pieChartSeries} type="donut" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Offering Chart */}
-              <div className="col-lg-12">
-                <div className="card mb-4">
-                  <div className="card-header" style={{ cursor: 'move' }}>
-                    <h3 className="card-title fw-bold fs-5">Offering Over Time</h3>
-                  </div>
-                  <div className="card-body">
-                    <Chart options={offeringChartOptions} series={offeringChartSeries} type="area" height={500} />
-                    <div className="d-flex flex-row justify-content-end mt-2">
-                      <span className="me-2"><i className="bi bi-square-fill text-primary"></i> First Offering</span>
-                      <span className="me-2"><i className="bi bi-square-fill text-success"></i> Second Offering</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+const C = {
+  bg: "linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%)",
+  surface: "#ffffff",
+  border: "#e8e2d9",
+  text: "#1c1a17",
+  muted: "#8a8279",
+  faint: "#f0ece5",
+  sage: "#4a7c59",
+  sageL: "#e8f2ec",
+  sky: "#2e6da4",
+  skyL: "#e4eef8",
+  amber: "#c47c2b",
+  amberL: "#fdf0e0",
+  rose: "#b24b5a",
+  roseL: "#fce8eb",
+  violet: "#6b4fa0",
+  violetL: "#f0ebfa",
+  teal: "#2e8b80",
+  tealL: "#e5f5f3",
 };
 
-export default Home;
+
+function Counter({ to, prefix = "", suffix = "" }) {
+  const [v, setV] = useState(0);
+  const r = useRef();
+  useEffect(() => {
+    const s = Date.now(), d = 1300;
+    const t = () => {
+      const p = Math.min((Date.now() - s) / d, 1), e = 1 - Math.pow(1 - p, 4);
+      setV(Math.floor(e * to));
+      if (p < 1) r.current = requestAnimationFrame(t);
+    };
+    r.current = requestAnimationFrame(t);
+    return () => cancelAnimationFrame(r.current);
+  }, [to]);
+  return <>{prefix}{v.toLocaleString()}{suffix}</>;
+}
+
+function Tip({ active, payload, label, prefix = "" }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: "#fff", border: `1px solid ${C.border}`,
+      borderRadius: 10, padding: "10px 14px", fontSize: 12,
+      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+    }}>
+      <div style={{ fontWeight: 700, color: C.text, marginBottom: 6 }}>{label}</div>
+      {payload.map(p => (
+        <div key={p.name} style={{ color: C.muted, marginBottom: 2 }}>
+          <span style={{ color: p.color, fontWeight: 600 }}>{p.name}: </span>
+          <span style={{ color: C.text, fontWeight: 600 }}>{prefix}{typeof p.value === "number" ? p.value.toLocaleString() : p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, change, accent, accentL, prefix = "", delay = 0 }) {
+  const [vis, setVis] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVis(true), delay); return () => clearTimeout(t); }, [delay]);
+  const up = change >= 0;
+  return (
+    <div className="stat-card" style={{
+      background: C.surface, border: `1px solid ${C.border}`,
+      borderRadius: 16, padding: "20px 22px",
+      opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(12px)",
+      transition: "opacity 0.5s ease, transform 0.5s ease",
+      position: "relative", overflow: "hidden",
+    }}>
+      <div style={{ position: "absolute", top: -20, right: -20, width: 90, height: 90, borderRadius: "50%", background: accentL, opacity: 0.7 }} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: accentL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{icon}</div>
+        <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: up ? "#e8f5e9" : "#fce8eb", color: up ? "#2e7d32" : C.rose }}>
+          {up ? "↑" : "↓"} {Math.abs(change)}%
+        </span>
+      </div>
+      <div style={{ fontSize: 30, fontWeight: 800, color: C.text, fontFamily: "'Fraunces', serif", letterSpacing: "-0.02em", lineHeight: 1 }}>
+        <Counter to={value} prefix={prefix} />
+      </div>
+      <div style={{ fontSize: 12, color: C.muted, marginTop: 6, fontWeight: 600 }}>{label}</div>
+    </div>
+  );
+}
+
+function Card({ title, icon, children, action, style = {}, bodyStyle = {} }) {
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden", height: "100%", display: "flex", flexDirection: "column", ...style }}>
+      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {icon && <span style={{ fontSize: 16 }}>{icon}</span>}
+          <span style={{ fontSize: 14, fontWeight: 700, color: C.text, fontFamily: "'Fraunces', serif" }}>{title}</span>
+        </div>
+        {action && <button style={{ fontSize: 11, fontWeight: 700, color: C.sage, background: "transparent", border: "none", cursor: "pointer", letterSpacing: "0.04em" }}>{action}</button>}
+      </div>
+      <div style={{ padding: "16px 20px", flex: 1, ...bodyStyle }}>{children}</div>
+    </div>
+  );
+}
+
+function ProgressBar({ pct, color }) {
+  return (
+    <div style={{ height: 6, background: C.faint, borderRadius: 3, overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${pct}%`, borderRadius: 3, background: color, transition: "width 0.8s ease" }} />
+    </div>
+  );
+}
+
+function Dashboard() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("area");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      try {
+        const result = await dashboardService.getDashboardData(user);
+        setData(result.data);
+      } catch (err) {
+        console.error("Dashboard Load Error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  if (loading || !data) return null;
+
+  // Logic to slice data for responsiveness
+  const getResponsiveData = (chartData) => {
+    if (!chartData) return [];
+    return isSmallScreen ? chartData.slice(-4) : chartData;
+  };
+
+  const totalDemo = data.demographics.reduce((a, b) => a + b.value, 0);
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;800;900&family=Outfit:wght@400;500;600;700&display=swap');
+        *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+        html,body,#root { height:100%; background:${C.bg}; }
+
+        .responsive-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .responsive-grid-12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; margin-bottom: 16px; }
+        .grid-span-8 { grid-column: span 8; }
+        .grid-span-4 { grid-column: span 4; }
+
+        @media (max-width: 1024px) {
+          .responsive-grid-4 { grid-template-columns: repeat(2, 1fr); }
+          .grid-span-8, .grid-span-4 { grid-column: span 12; }
+        }
+
+        @media (max-width: 640px) {
+          .responsive-grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+      `}</style>
+
+      <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'Outfit', sans-serif", background: C.bg }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowX: "hidden" }}>
+          <main style={{ flex: 1, padding: "24px 28px", overflowY: "auto" }}>
+
+            <div className="responsive-grid-4">
+              <RequireAccess minStatus="manager">
+                <StatCard icon="◎" label="Total Groups" value={data.stats.totalGroups} change={5.2} accent={C.amber} accentL={C.amberL} />
+              </RequireAccess>
+
+              <RequireAccess minStatus="groupAdmin">
+                <StatCard icon="⛪" label="Total Churches" value={data.stats.totalChurches} change={2.1} accent={C.sky} accentL={C.skyL} />
+              </RequireAccess>
+
+              <RequireAccess minStatus="groupAdmin">
+                <StatCard icon="👤" label="Total Users" value={data.stats.totalUsers} change={1.5} accent={C.violet} accentL={C.violetL} />
+              </RequireAccess>
+
+              <RequireAccess minStatus="churchAdmin">
+                <StatCard icon="👥" label="Total Members" value={data.stats.totalMembers} change={8.7} accent={C.sage} accentL={C.sageL} />
+              </RequireAccess>
+
+              <RequireStrictAccess allowedStatuses={['groupPastor', 'groupAdmin', 'churchAdmin', 'churchPastor']}>
+                <StatCard icon="🛠" label="Total Workers" value={data.stats.totalWorkers} change={3.2} accent={C.teal} accentL={C.tealL} />
+              </RequireStrictAccess>
+
+              <RequireStrictAccess allowedStatuses={['churchAdmin', 'churchPastor']}>
+                <StatCard icon="🌱" label="New Comers" value={data.stats.newComers} change={12} accent={C.sky} accentL={C.skyL} />
+                <StatCard icon="💰" label="Monthly Offering" value={data.stats.monthlyOffering} change={-3.1} prefix="GHS " accent={C.rose} accentL={C.roseL} />
+              </RequireStrictAccess>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }}>
+              <Card title="Attendance Overview" icon="📊" action="View Full Report" bodyStyle={{ padding: "16px 0 0 0" }}>
+                <div style={{ display: "flex", gap: 6, padding: "0 20px", marginBottom: 16 }}>
+                  {[{ key: "area", label: "Trend" }, { key: "bar", label: "Breakdown" }].map(t => (
+                    <button key={t.key} onClick={() => setActiveTab(t.key)} style={{ padding: "5px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, background: activeTab === t.key ? C.sage : C.faint, color: activeTab === t.key ? "#fff" : C.muted, fontFamily: "'Outfit', sans-serif" }}>{t.label}</button>
+                  ))}
+                  <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+                    {[{ l: "Adults", c: C.sky }, { l: "Youths", c: C.sage }, { l: "Children", c: C.amber }].map(x => (
+                      <div key={x.l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: x.c }} />
+                        <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{x.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={340}>
+                  {activeTab === "area" ? (
+                    <AreaChart data={getResponsiveData(data.attendance)} margin={{ left: -10, right: 10 }}>
+                      <defs>
+                        {[["gA", C.sky], ["gY", C.sage], ["gC", C.amber]].map(([id, c]) => (
+                          <linearGradient key={id} id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={c} stopOpacity={0.2} /><stop offset="95%" stopColor={c} stopOpacity={0} /></linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                      <XAxis dataKey="month" tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<Tip />} />
+                      <Area type="monotone" dataKey="Adults" stroke={C.sky} strokeWidth={2} fill="url(#gA)" dot={false} />
+                      <Area type="monotone" dataKey="Youths" stroke={C.sage} strokeWidth={2} fill="url(#gY)" dot={false} />
+                      <Area type="monotone" dataKey="Children" stroke={C.amber} strokeWidth={2} fill="url(#gC)" dot={false} />
+                    </AreaChart>
+                  ) : (
+                    <BarChart data={getResponsiveData(data.attendance)} barGap={3} barSize={8} margin={{ left: -10, right: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                      <XAxis dataKey="month" tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <Tooltip content={<Tip />} />
+                      <Bar dataKey="Adults" fill={C.sky} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Youths" fill={C.sage} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Children" fill={C.amber} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              </Card>
+            </div>
+
+            <div className="responsive-grid-12">
+              <div className="grid-span-8">
+                <Card title="Pledge Fulfillment" icon="📌" action="View Pledges" bodyStyle={{ padding: "16px 0 0 0", display: "flex", flexDirection: "column" }}>
+                  <div style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 12 }}>
+                    {[{ l: "Pledged", c: C.violet }, { l: "Fulfilled", c: C.teal }].map(x => (
+                      <div key={x.l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: x.c }} />
+                        <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{x.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                      <BarChart data={getResponsiveData(data.pledgeData)} barGap={6} barSize={24} margin={{ left: -10, right: 10, bottom: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                        <XAxis dataKey="month" tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                        <Tooltip content={<Tip prefix="GHS " />} />
+                        <Bar dataKey="pledged" fill={C.violetL} stroke={C.violet} strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="fulfilled" fill={C.teal} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid-span-4">
+                <Card title="Church Demographics" icon="🏛" action="Full Report" bodyStyle={{ display: "flex", flexDirection: "column" }}>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <PieChart>
+                      <Pie data={data.demographics} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={3} dataKey="value">
+                        {data.demographics.map((d, i) => <Cell key={i} fill={d.color || C.muted} />)}
+                      </Pie>
+                      <Tooltip formatter={v => v.toLocaleString()} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 16 }}>
+                    {data.demographics.map(d => (
+                      <div key={d.name}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                          <span style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{d.name}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>{Math.round(d.value / totalDemo * 100)}%</span>
+                        </div>
+                        <ProgressBar pct={d.value / totalDemo * 100} color={d.color || C.muted} />
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }}>
+              <Card title="Offering Over Time" icon="💰" action="Full Report" bodyStyle={{ padding: "16px 0 0 0" }}>
+                <div style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 12 }}>
+                  {[{ l: "First Offering", c: C.sage }, { l: "Second Offering", c: C.sky }].map(x => (
+                    <div key={x.l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: x.c }} />
+                      <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{x.l}</span>
+                    </div>
+                  ))}
+                </div>
+                <ResponsiveContainer width="100%" height={340}>
+                  <AreaChart data={getResponsiveData(data.offerings)} margin={{ left: -10, right: 10 }}>
+                    <defs>
+                      <linearGradient id="gF" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.sage} stopOpacity={0.25} /><stop offset="95%" stopColor={C.sage} stopOpacity={0} /></linearGradient>
+                      <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={C.sky} stopOpacity={0.25} /><stop offset="95%" stopColor={C.sky} stopOpacity={0} /></linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                    <XAxis dataKey="month" tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: C.muted, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip content={<Tip prefix="GHS " />} />
+                    <Area type="monotone" dataKey="First" stroke={C.sage} strokeWidth={2} fill="url(#gF)" dot={false} />
+                    <Area type="monotone" dataKey="Second" stroke={C.sky} strokeWidth={2} fill="url(#gS)" dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Card>
+            </div>
+          </main>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default Dashboard;

@@ -14,6 +14,21 @@ const authService = {
   logout: async () => {
     await api.post("/auth/logout");
   },
+
+  requestPasswordReset: async (credentials) => {
+    const res = await api.post('auth/reqResetPassword', credentials)
+    return res.data;
+  },
+
+  authenticateCode: async (credentials) => {
+    const res = await api.post('auth/authCode', credentials)
+    return res.data;
+  },
+
+  resetPassword: async (credentials) => {
+    const res = await api.post("/auth/resetPassword", credentials);
+    return res.data;
+  }
 };
 
 export default authService;

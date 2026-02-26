@@ -143,7 +143,7 @@ const Navbar = ({ onToggle }) => {
               <li className="nav-item">
                 <Link to="/home" className={`nav-link d-flex align-items-center ${isActive('/home')}`} onClick={handleMobileLinkClick}>
                   <i className="nav-icon bi bi-house-fill me-2"></i>
-                  <p className="mb-0">Home</p>
+                  <p className="mb-0">Dashboard</p>
                 </Link>
               </li>
 
