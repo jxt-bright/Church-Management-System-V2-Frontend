@@ -26,6 +26,7 @@ const MemberRegistration = () => {
     relationshipStatus: '',
     category: '',
     memberStatus: '',
+    department: '',
     profileImage: null,
     workOrSchool: '',
     levelOrPosition: '',
