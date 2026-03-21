@@ -49,6 +49,7 @@ const ReviewMemberInfo = ({ onBack, data, onSubmit, isLoading }) => {
                             <p className="mb-1"><strong>Relationship Status:</strong> {data.relationshipStatus}</p>
                             <p className="mb-1"><strong>Category:</strong> {data.category}</p>
                             <p className="mb-0"><strong>Member status:</strong> {data.memberStatus}</p>
+                            <p className="mb-0"><strong>Department:</strong> {data.department}</p>
                         </div>
                     </div>
                 </div>

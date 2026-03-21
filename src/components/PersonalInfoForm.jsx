@@ -382,6 +382,13 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
                     </div>
                 </div>
 
+                <div className="row">
+                    <div className="col mb-3">
+                        <label className="form-label">Department(eg; Choir, Kitchen, Ushering ...)</label>
+                        <input type="text" name="department" className="form-control" onChange={onChange} value={data.department || ''} autoComplete='off' />
+                    </div>
+                </div>
+
                 <div className="d-flex justify-content-end">
                     <button type="submit" className="btn btn-primary">Next</button>
                 </div>
