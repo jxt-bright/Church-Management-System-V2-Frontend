@@ -368,6 +368,7 @@ const PersonalInfoForm = ({ data, onChange, onNext, onImageChange, user, churche
                         <select name="category" className="form-select" onChange={onChange} value={data.category || ''} required>
                             <option value="">Select Category</option>
                             <option value="Adult">Adult</option>
+                            <option value="Campus">Campus</option>
                             <option value="Youth">Youth</option>
                             <option value="Children">Children</option>
                         </select>
